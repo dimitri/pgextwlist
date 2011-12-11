@@ -61,7 +61,6 @@
 PG_MODULE_MAGIC;
 
 static bool extwlist_error = true;
-static char *extwlist_user = NULL;
 static char *extwlist_extensions = NULL;
 
 static ProcessUtility_hook_type prev_ProcessUtility = NULL;
@@ -95,28 +94,16 @@ _PG_init(void) {
     if( parse_bool(GetConfigOptionByName("extwlist.error", NULL), &error) )
       extwlist_error = error;
 
-    extwlist_user = GetConfigOptionByName("extwlist.user", NULL);
     extwlist_extensions = GetConfigOptionByName("extwlist.extensions", NULL);
   }
   PG_CATCH();
   {
-	  DefineCustomStringVariable("extwlist.user",
-								 "User that performs whitelisted extension installation",
-								 "current user is switched only for the CREATE EXTENSION command",
-								 &extwlist_user,
-								 "",
-								 PGC_USERSET,
-								 GUC_NOT_IN_SAMPLE,
-								 NULL,
-								 NULL,
-								 NULL);
-
 	  DefineCustomStringVariable("extwlist.extensions",
 								 "List of extensions that are whitelisted",
 								 "Separated by comma",
 								 &extwlist_extensions,
 								 "",
-								 PGC_USERSET,
+								 PGC_SUSET,
 								 GUC_NOT_IN_SAMPLE,
 								 NULL,
 								 NULL,
@@ -127,13 +114,12 @@ _PG_init(void) {
 							   "When false, will only raise a WARNING",
 							   &extwlist_error,
 							   false,
-							   PGC_USERSET,
+							   PGC_SUSET,
 							   GUC_NOT_IN_SAMPLE,
 							   NULL,
 							   NULL,
 							   NULL);
 
-    EmitWarningsOnPlaceholders("extwlist.user");
     EmitWarningsOnPlaceholders("extwlist.extensions");
     EmitWarningsOnPlaceholders("extwlist.error");
   }
