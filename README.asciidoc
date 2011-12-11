@@ -1,4 +1,4 @@
-= pg_ext_whitelist
+= PostgreSQL Extension Whitelist
 
 This extension implements extension whitelisting, and will actively prevent
 users from installing extensions not in the provided list. Also, this
