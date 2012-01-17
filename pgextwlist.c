@@ -156,16 +156,30 @@ extwlist_ProcessUtility(Node *parsetree, const char *queryString,
 
 		if (whitelisted)
 		{
-			bool is_superuser = superuser();
+			const bool already_superuser = superuser();
 
-			if (!is_superuser)
+			if (!already_superuser)
 				UpdateCurrentRoleToSuperuser(true);
 
-			call_ProcessUtility(parsetree, queryString, params,
-								isTopLevel, dest, completionTag);
+			/*
+			 * Be extra careful here, we need to drop off superuser privileges
+			 * in case of either success or failure.
+			 */
+			PG_TRY();
+			{
+				call_ProcessUtility(parsetree, queryString, params,
+									isTopLevel, dest, completionTag);
+			}
+			PG_CATCH();
+			{
+				if (!already_superuser)
+					UpdateCurrentRoleToSuperuser(false);
+				PG_RE_THROW();
+			}
+			PG_END_TRY();
 
 			/* Don't forget to get back to what it was before */
-			if (!is_superuser)
+			if (!already_superuser)
 				UpdateCurrentRoleToSuperuser(false);
 		}
 		else
@@ -192,20 +206,12 @@ call_ProcessUtility(Node *parsetree, const char *queryString,
 					ParamListInfo params, bool isTopLevel,
 					DestReceiver *dest, char *completionTag)
 {
-	PG_TRY();
-	{
-		if (prev_ProcessUtility)
-			prev_ProcessUtility(parsetree, queryString, params,
+	if (prev_ProcessUtility)
+		prev_ProcessUtility(parsetree, queryString, params,
+							isTopLevel, dest, completionTag);
+	else
+		standard_ProcessUtility(parsetree, queryString, params,
 								isTopLevel, dest, completionTag);
-		else
-			standard_ProcessUtility(parsetree, queryString, params,
-									isTopLevel, dest, completionTag);
-	}
-	PG_CATCH();
-	{
-		PG_RE_THROW();
-	}
-	PG_END_TRY();
 }
 
 /*
@@ -225,7 +231,6 @@ UpdateCurrentRoleToSuperuser(bool issuper)
 	HeapTuple	tuple,
 				new_tuple;
 	char       *role = GetUserNameFromId(GetUserId());
-	Oid			roleid;
 
 	/*
 	 * Scan the pg_authid relation to be certain the user exists.
@@ -238,8 +243,6 @@ UpdateCurrentRoleToSuperuser(bool issuper)
 		ereport(ERROR,
 				(errcode(ERRCODE_UNDEFINED_OBJECT),
 				 errmsg("role \"%s\" does not exist", role)));
-
-	roleid = HeapTupleGetOid(tuple);
 
 	/*
 	 * Build an updated tuple, perusing the information just obtained
