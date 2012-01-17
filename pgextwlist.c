@@ -60,7 +60,6 @@
 
 PG_MODULE_MAGIC;
 
-static bool extwlist_error = true;
 static char *extwlist_extensions = NULL;
 
 static ProcessUtility_hook_type prev_ProcessUtility = NULL;
@@ -89,11 +88,6 @@ void
 _PG_init(void) {
   PG_TRY();
   {
-    bool error = true;
-
-    if( parse_bool(GetConfigOptionByName("extwlist.error", NULL), &error) )
-      extwlist_error = error;
-
     extwlist_extensions = GetConfigOptionByName("extwlist.extensions", NULL);
   }
   PG_CATCH();
@@ -108,20 +102,7 @@ _PG_init(void) {
 								 NULL,
 								 NULL,
 								 NULL);
-
-	  DefineCustomBoolVariable("extwlist.error",
-							   "Error out when extension is no whitelisted",
-							   "When false, will only raise a WARNING",
-							   &extwlist_error,
-							   false,
-							   PGC_SUSET,
-							   GUC_NOT_IN_SAMPLE,
-							   NULL,
-							   NULL,
-							   NULL);
-
     EmitWarningsOnPlaceholders("extwlist.extensions");
-    EmitWarningsOnPlaceholders("extwlist.error");
   }
   PG_END_TRY();
 
@@ -189,13 +170,15 @@ extwlist_ProcessUtility(Node *parsetree, const char *queryString,
 		}
 		else
 		{
-			int level = ERROR;
-			if (!extwlist_error)
-				level = WARNING;
-
-			ereport(level,
+			ereport(ERROR,
 					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					 errmsg("extension \"%s\" is not whitelisted", name)));
+					 errmsg("extension \"%s\" is not whitelisted", name),
+					 errdetail("Installing the extension \"%s\" failed, "
+							   "because it is not on the whitelist of "
+							   "user-installable extensions.", name),
+					 errhint("Your system administrator has allowed users "
+							 "to install certain extensions. "
+							 "See: SHOW extwlist.extensions;")));
 		}
 	}
 	else

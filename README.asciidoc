@@ -35,18 +35,11 @@ extwlist.extensions::
 
   List of extensions allowed for installation.
 
-extwlist.error::
-
-  When set to +true+, an error is raised when attempting to install an
-  extension not in the whitelist.  When set to +false+, a +WARNING+ is
-  raised, thus allowing the current transaction to silently continue.
-  Defaults to +true+.
-
 == Usage
 
 That's quite simple:
 
-  $ edit postgresql.conf, custom_variable_classes and extwlist.*
+  $ edit postgresql.conf, custom_variable_classes and extwlist.extensions
 
   dim=# show extwlist.extensions;
   show extwlist.extensions;
@@ -55,31 +48,18 @@ That's quite simple:
    hstore,cube
   (1 row)
   
-  dim=# show extwlist.error;
-  show extwlist.error;
-   extwlist.error 
-  ----------------
-   on
-  (1 row)
-  
   dim=# create extension foo;
   create extension foo;
   ERROR:  extension "foo" is not whitelisted
+  DETAIL:  Installing the extension "foo" failed, because it is not on the whitelist of user-installable extensions.
+  HINT:  Your system administrator has allowed users to install certain extensions. See: SHOW extwlist.extensions;
   
-  dim=# set extwlist.error to false;
-  set extwlist.error to false;
-  SET
-  
-  dim=# create extension foo;
-  create extension foo;
-  WARNING:  extension "foo" is not whitelisted
-  CREATE EXTENSION
-
   dim=# create extension hstore;
   create extension hstore;
   WARNING:  => is deprecated as an operator name
   DETAIL:  This name may be disallowed altogether in future versions of PostgreSQL.
   CREATE EXTENSION
+
   dim=# \dx
   \dx
                              List of installed extensions
@@ -103,9 +83,13 @@ Even if you're not superuser:
   WARNING:  => is deprecated as an operator name
   DETAIL:  This name may be disallowed altogether in future versions of PostgreSQL.
   CREATE EXTENSION
+
   dim=> create extension earthdistance;
   create extension earthdistance;
   ERROR:  extension "earthdistance" is not whitelisted
+  DETAIL:  Installing the extension "earthdistance" failed, because it is not on the whitelist of user-installable extensions.
+  HINT:  Your system administrator has allowed users to install certain extensions. SHOW extwlist.extensions;
+
   dim=> \dx
   \dx
                              List of installed extensions
