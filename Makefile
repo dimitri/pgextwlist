@@ -1,5 +1,5 @@
 MODULES = pgextwlist
-DOCS    = README.asciidoc
+DOCS    = README.md
 
 PG_CONFIG = pg_config
 PGXS = $(shell $(PG_CONFIG) --pgxs)
