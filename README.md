@@ -12,10 +12,20 @@ You should have received that as a debian package or equivalent:
 
     apt-get install postgresql-9.1-extension-whitelist
 
-If that's not the case, install the server development packages then:
+If that's not the case:
+
+1. install the server development packages (on Ubuntu, this would look like `apt-get install postgresql-server-dev-all`)
+2. then:
 
     make
     sudo make install
+
+This will generate a `pgextwlist.so` shared library that you will have to
+install in
+
+    `pg_config --libdir`/plugins
+
+so that your backend loads it automatically.
 
 ## Setup
 
@@ -39,7 +49,7 @@ that performs the extension installing, and the error behavior.
 
 That's quite simple:
 
-    $ edit postgresql.conf, custom_variable_classes and extwlist.extensions
+    $ edit postgresql.conf to add local_preload_libraries, custom_variable_classes and extwlist.extensions
 
     dim=# show extwlist.extensions;
     show extwlist.extensions;
@@ -47,13 +57,13 @@ That's quite simple:
     ---------------------
      hstore,cube
     (1 row)
-    
+
     dim=# create extension foo;
     create extension foo;
     ERROR:  extension "foo" is not whitelisted
     DETAIL:  Installing the extension "foo" failed, because it is not on the whitelist of user-installable extensions.
     HINT:  Your system administrator has allowed users to install certain extensions. See: SHOW extwlist.extensions;
-    
+
     dim=# create extension hstore;
     create extension hstore;
     WARNING:  => is deprecated as an operator name
