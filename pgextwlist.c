@@ -54,7 +54,7 @@
 #error "Unknown PostgreSQL version"
 #endif
 
-#if PG_MAJOR_VERSION != 901 && PG_MAJOR_VERSION != 902
+#if PG_MAJOR_VERSION != 901 && PG_MAJOR_VERSION != 902 && PG_MAJOR_VERSION != 903
 #error "Unsupported postgresql version"
 #endif
 
@@ -68,12 +68,22 @@ void		_PG_init(void);
 void		_PG_fini(void);
 
 static void extwlist_ProcessUtility(Node *parsetree, const char *queryString,
+#if PG_VERSION_NUM < 90300
 									ParamListInfo params, bool isTopLevel,
-									DestReceiver *dest, char *completionTag);
+#else
+									ProcessUtilityContext context, ParamListInfo params,
+#endif
+									DestReceiver *dest, char *completionTag
+);
 
 static void call_ProcessUtility(Node *parsetree, const char *queryString,
+#if PG_VERSION_NUM < 90300
 								ParamListInfo params, bool isTopLevel,
-								DestReceiver *dest, char *completionTag);
+#else
+								ProcessUtilityContext context, ParamListInfo params,
+#endif
+								DestReceiver *dest, char *completionTag
+);
 
 static void UpdateCurrentRoleToSuperuser(bool issuper);
 
@@ -125,7 +135,11 @@ _PG_fini(void)
  */
 static void
 extwlist_ProcessUtility(Node *parsetree, const char *queryString,
+#if PG_VERSION_NUM < 90300
 						ParamListInfo params, bool isTopLevel,
+#else
+						ProcessUtilityContext context, ParamListInfo params,
+#endif
 						DestReceiver *dest, char *completionTag)
 {
 	if (nodeTag(parsetree) == T_CreateExtensionStmt)
@@ -167,8 +181,13 @@ extwlist_ProcessUtility(Node *parsetree, const char *queryString,
 			 */
 			PG_TRY();
 			{
-				call_ProcessUtility(parsetree, queryString, params,
-									isTopLevel, dest, completionTag);
+				call_ProcessUtility(parsetree, queryString,
+#if PG_VERSION_NUM < 90300
+									params, isTopLevel,
+#else
+									context, params,
+#endif
+									dest, completionTag);
 			}
 			PG_CATCH();
 			{
@@ -197,21 +216,41 @@ extwlist_ProcessUtility(Node *parsetree, const char *queryString,
 	}
 	else
 		/* command is not CREATE EXTENSION, bypass */
-		call_ProcessUtility(parsetree, queryString, params,
-							isTopLevel, dest, completionTag);
+
+		call_ProcessUtility(parsetree, queryString,
+#if PG_VERSION_NUM < 90300
+					params, isTopLevel,
+#else
+					context, params,
+#endif
+					dest, completionTag);
 }
 
 static void
 call_ProcessUtility(Node *parsetree, const char *queryString,
-					ParamListInfo params, bool isTopLevel,
-					DestReceiver *dest, char *completionTag)
+#if PG_VERSION_NUM < 90300
+			ParamListInfo params, bool isTopLevel,
+#else
+			ProcessUtilityContext context, ParamListInfo params,
+#endif
+			DestReceiver *dest, char *completionTag
+)
 {
+#if PG_VERSION_NUM < 90300
 	if (prev_ProcessUtility)
 		prev_ProcessUtility(parsetree, queryString, params,
 							isTopLevel, dest, completionTag);
 	else
 		standard_ProcessUtility(parsetree, queryString, params,
 								isTopLevel, dest, completionTag);
+#else
+	if (prev_ProcessUtility)
+		prev_ProcessUtility(parsetree, queryString, context,
+							params, dest, completionTag);
+	else
+		standard_ProcessUtility(parsetree, queryString, context,
+								params, dest, completionTag);
+#endif
 }
 
 /*
