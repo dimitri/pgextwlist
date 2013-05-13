@@ -44,10 +44,9 @@
  */
 
 /*
- * This code has only been tested with PostgreSQL 9.1.
- *
- * It should be "deprecated" in 9.2 and following thanks to command triggers,
- * and the extension mechanism it works with didn't exist before 9.1.
+ * This code should be eventually be "deprecated" and replaced with
+ * functionality based on command triggers. It does not work on versions
+ * older than 9.1 due to lack of proper hooks.
  */
 #ifdef PG_VERSION_NUM
 #define PG_MAJOR_VERSION (PG_VERSION_NUM / 100)
