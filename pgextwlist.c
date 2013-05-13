@@ -11,9 +11,19 @@
 #include <stdio.h>
 #include "postgres.h"
 
+#ifdef PG_VERSION_NUM
+#define PG_MAJOR_VERSION (PG_VERSION_NUM / 100)
+#else
+#error "Unknown PostgreSQL version"
+#endif
+
 #include "access/genam.h"
 #include "access/heapam.h"
+#if PG_VERSION_NUM < 90300
 #include "access/htup.h"
+#else
+#include "access/htup_details.h"
+#endif
 #include "access/xact.h"
 #include "catalog/dependency.h"
 #include "catalog/indexing.h"
@@ -48,12 +58,6 @@
  * functionality based on command triggers. It does not work on versions
  * older than 9.1 due to lack of proper hooks.
  */
-#ifdef PG_VERSION_NUM
-#define PG_MAJOR_VERSION (PG_VERSION_NUM / 100)
-#else
-#error "Unknown PostgreSQL version"
-#endif
-
 #if PG_MAJOR_VERSION != 901 && PG_MAJOR_VERSION != 902 && PG_MAJOR_VERSION != 903
 #error "Unsupported postgresql version"
 #endif
