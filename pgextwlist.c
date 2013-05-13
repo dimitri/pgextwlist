@@ -11,8 +11,19 @@
 #include <stdio.h>
 #include "postgres.h"
 
+#ifdef PG_VERSION_NUM
+#define PG_MAJOR_VERSION (PG_VERSION_NUM / 100)
+#else
+#error "Unknown PostgreSQL version"
+#endif
+
 #include "access/genam.h"
 #include "access/heapam.h"
+#if PG_VERSION_NUM < 90300
+#include "access/htup.h"
+#else
+#include "access/htup_details.h"
+#endif
 #include "access/xact.h"
 #include "catalog/dependency.h"
 #include "catalog/indexing.h"
@@ -43,18 +54,11 @@
  */
 
 /*
- * This code has only been tested with PostgreSQL 9.1.
- *
- * It should be "deprecated" in 9.2 and following thanks to command triggers,
- * and the extension mechanism it works with didn't exist before 9.1.
+ * This code should be eventually be "deprecated" and replaced with
+ * functionality based on command triggers. It does not work on versions
+ * older than 9.1 due to lack of proper hooks.
  */
-#ifdef PG_VERSION_NUM
-#define PG_MAJOR_VERSION (PG_VERSION_NUM / 100)
-#else
-#error "Unknown PostgreSQL version"
-#endif
-
-#if PG_MAJOR_VERSION != 901 && PG_MAJOR_VERSION != 902
+#if PG_MAJOR_VERSION != 901 && PG_MAJOR_VERSION != 902 && PG_MAJOR_VERSION != 903
 #error "Unsupported postgresql version"
 #endif
 
@@ -68,12 +72,22 @@ void		_PG_init(void);
 void		_PG_fini(void);
 
 static void extwlist_ProcessUtility(Node *parsetree, const char *queryString,
+#if PG_VERSION_NUM < 90300
 									ParamListInfo params, bool isTopLevel,
-									DestReceiver *dest, char *completionTag);
+#else
+									ProcessUtilityContext context, ParamListInfo params,
+#endif
+									DestReceiver *dest, char *completionTag
+);
 
 static void call_ProcessUtility(Node *parsetree, const char *queryString,
+#if PG_VERSION_NUM < 90300
 								ParamListInfo params, bool isTopLevel,
-								DestReceiver *dest, char *completionTag);
+#else
+								ProcessUtilityContext context, ParamListInfo params,
+#endif
+								DestReceiver *dest, char *completionTag
+);
 
 static void UpdateCurrentRoleToSuperuser(bool issuper);
 
@@ -125,7 +139,11 @@ _PG_fini(void)
  */
 static void
 extwlist_ProcessUtility(Node *parsetree, const char *queryString,
+#if PG_VERSION_NUM < 90300
 						ParamListInfo params, bool isTopLevel,
+#else
+						ProcessUtilityContext context, ParamListInfo params,
+#endif
 						DestReceiver *dest, char *completionTag)
 {
 	if (nodeTag(parsetree) == T_CreateExtensionStmt)
@@ -167,8 +185,13 @@ extwlist_ProcessUtility(Node *parsetree, const char *queryString,
 			 */
 			PG_TRY();
 			{
-				call_ProcessUtility(parsetree, queryString, params,
-									isTopLevel, dest, completionTag);
+				call_ProcessUtility(parsetree, queryString,
+#if PG_VERSION_NUM < 90300
+									params, isTopLevel,
+#else
+									context, params,
+#endif
+									dest, completionTag);
 			}
 			PG_CATCH();
 			{
@@ -197,21 +220,41 @@ extwlist_ProcessUtility(Node *parsetree, const char *queryString,
 	}
 	else
 		/* command is not CREATE EXTENSION, bypass */
-		call_ProcessUtility(parsetree, queryString, params,
-							isTopLevel, dest, completionTag);
+
+		call_ProcessUtility(parsetree, queryString,
+#if PG_VERSION_NUM < 90300
+					params, isTopLevel,
+#else
+					context, params,
+#endif
+					dest, completionTag);
 }
 
 static void
 call_ProcessUtility(Node *parsetree, const char *queryString,
-					ParamListInfo params, bool isTopLevel,
-					DestReceiver *dest, char *completionTag)
+#if PG_VERSION_NUM < 90300
+			ParamListInfo params, bool isTopLevel,
+#else
+			ProcessUtilityContext context, ParamListInfo params,
+#endif
+			DestReceiver *dest, char *completionTag
+)
 {
+#if PG_VERSION_NUM < 90300
 	if (prev_ProcessUtility)
 		prev_ProcessUtility(parsetree, queryString, params,
 							isTopLevel, dest, completionTag);
 	else
 		standard_ProcessUtility(parsetree, queryString, params,
 								isTopLevel, dest, completionTag);
+#else
+	if (prev_ProcessUtility)
+		prev_ProcessUtility(parsetree, queryString, context,
+							params, dest, completionTag);
+	else
+		standard_ProcessUtility(parsetree, queryString, context,
+								params, dest, completionTag);
+#endif
 }
 
 /*
