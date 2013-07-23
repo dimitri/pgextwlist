@@ -54,7 +54,10 @@
 #error "Unknown PostgreSQL version"
 #endif
 
-#if PG_MAJOR_VERSION != 901 && PG_MAJOR_VERSION != 902
+#if PG_MAJOR_VERSION != 901    \
+	&& PG_MAJOR_VERSION != 902 \
+	&& PG_MAJOR_VERSION != 903 \
+	&& PG_MAJOR_VERSION != 904
 #error "Unsupported postgresql version"
 #endif
 
@@ -67,15 +70,39 @@ static ProcessUtility_hook_type prev_ProcessUtility = NULL;
 void		_PG_init(void);
 void		_PG_fini(void);
 
-static void extwlist_ProcessUtility(Node *parsetree, const char *queryString,
-									ParamListInfo params, bool isTopLevel,
-									DestReceiver *dest, char *completionTag);
+#if PG_MAJOR_VERSION < 903
+#define PROCESS_UTILITY_PROTO_ARGS (Node *parsetree, const char *queryString, \
+									ParamListInfo params, bool isTopLevel,    \
+									DestReceiver *dest, char *completionTag)
 
-static void call_ProcessUtility(Node *parsetree, const char *queryString,
-								ParamListInfo params, bool isTopLevel,
-								DestReceiver *dest, char *completionTag);
+#define PROCESS_UTILITY_ARGS (parsetree, queryString, params, \
+                              isTopLevel, dest, completionTag)
+#else
+#define PROCESS_UTILITY_PROTO_ARGS (Node *parsetree,                   \
+										const char *queryString,       \
+										ProcessUtilityContext context, \
+										ParamListInfo params,          \
+										DestReceiver *dest,            \
+										char *completionTag)
 
-static void UpdateCurrentRoleToSuperuser(bool issuper);
+#define PROCESS_UTILITY_ARGS (parsetree, queryString, context, \
+                              params, dest, completionTag)
+#endif	/* PG_MAJOR_VERSION */
+
+#define EREPORT_EXTENSION_IS_NOT_WHITELISTED(op)						\
+        ereport(ERROR,                                                  \
+                (errcode(ERRCODE_INVALID_PARAMETER_VALUE),              \
+                 errmsg("extension \"%s\" is not whitelisted", name),   \
+                 errdetail("%s the extension \"%s\" failed, "           \
+                           "because it is not on the whitelist of "     \
+                           "user-installable extensions.", op, name),	\
+                 errhint("Your system administrator has allowed users " \
+                         "to install certain extensions. "              \
+						 "See: SHOW extwlist.extensions;")));
+
+
+static void extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS;
+static void call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS;
 
 /*
  * _PG_init()			- library load-time initialization
@@ -85,7 +112,8 @@ static void UpdateCurrentRoleToSuperuser(bool issuper);
  * Init the module, all we have to do here is getting our GUC
  */
 void
-_PG_init(void) {
+_PG_init(void)
+{
   PG_TRY();
   {
     extwlist_extensions = GetConfigOptionByName("extwlist.extensions", NULL);
@@ -120,155 +148,133 @@ _PG_fini(void)
 	ProcessUtility_hook = prev_ProcessUtility;
 }
 
+static bool
+extension_is_whitelisted(const char *name)
+{
+	bool        whitelisted = false;
+	char       *rawnames = pstrdup(extwlist_extensions);
+	List       *extensions;
+	ListCell   *lc;
+
+	if (!SplitIdentifierString(rawnames, ',', &extensions))
+	{
+		/* syntax error in extension name list */
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("parameter \"extwlist.extensions\" must be a list of extension names")));
+	}
+	foreach(lc, extensions)
+	{
+		char *curext = (char *) lfirst(lc);
+
+		if (!strcmp(name, curext))
+		{
+			whitelisted = true;
+			break;
+		}
+	}
+	return whitelisted;
+}
+
 /*
  * ProcessUtility hook
  */
 static void
-extwlist_ProcessUtility(Node *parsetree, const char *queryString,
-						ParamListInfo params, bool isTopLevel,
-						DestReceiver *dest, char *completionTag)
+extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 {
-	if (nodeTag(parsetree) == T_CreateExtensionStmt)
+	char	*name = NULL;
+
+	/* Don't try to make life hard for our friendly superusers. */
+	if (superuser())
 	{
-		bool        whitelisted = false;
-		char       *name = ((CreateExtensionStmt *)parsetree)->extname;
-		char       *rawnames = pstrdup(extwlist_extensions);
-		List       *extensions;
-		ListCell   *lc;
-
-		if (!SplitIdentifierString(rawnames, ',', &extensions))
-		{
-			/* syntax error in extension name list */
-			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					 errmsg("parameter \"extwlist.extensions\" must be a list of extension names")));
-		}
-		foreach(lc, extensions)
-		{
-			char *curext = (char *) lfirst(lc);
-
-			if (!strcmp(name, curext))
-			{
-				whitelisted = true;
-				break;
-			}
-		}
-
-		if (whitelisted)
-		{
-			const bool already_superuser = superuser();
-
-			if (!already_superuser)
-				UpdateCurrentRoleToSuperuser(true);
-
-			/*
-			 * Be extra careful here, we need to drop off superuser privileges
-			 * in case of either success or failure.
-			 */
-			PG_TRY();
-			{
-				call_ProcessUtility(parsetree, queryString, params,
-									isTopLevel, dest, completionTag);
-			}
-			PG_CATCH();
-			{
-				if (!already_superuser)
-					UpdateCurrentRoleToSuperuser(false);
-				PG_RE_THROW();
-			}
-			PG_END_TRY();
-
-			/* Don't forget to get back to what it was before */
-			if (!already_superuser)
-				UpdateCurrentRoleToSuperuser(false);
-		}
-		else
-		{
-			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					 errmsg("extension \"%s\" is not whitelisted", name),
-					 errdetail("Installing the extension \"%s\" failed, "
-							   "because it is not on the whitelist of "
-							   "user-installable extensions.", name),
-					 errhint("Your system administrator has allowed users "
-							 "to install certain extensions. "
-							 "See: SHOW extwlist.extensions;")));
-		}
+		call_ProcessUtility PROCESS_UTILITY_ARGS;
+		return;
 	}
-	else
-		/* command is not CREATE EXTENSION, bypass */
-		call_ProcessUtility(parsetree, queryString, params,
-							isTopLevel, dest, completionTag);
-}
 
-static void
-call_ProcessUtility(Node *parsetree, const char *queryString,
-					ParamListInfo params, bool isTopLevel,
-					DestReceiver *dest, char *completionTag)
-{
-	if (prev_ProcessUtility)
-		prev_ProcessUtility(parsetree, queryString, params,
-							isTopLevel, dest, completionTag);
-	else
-		standard_ProcessUtility(parsetree, queryString, params,
-								isTopLevel, dest, completionTag);
+	switch (nodeTag(parsetree))
+	{
+		case T_CreateExtensionStmt:
+			 name = ((CreateExtensionStmt *)parsetree)->extname;
+
+			 if (extension_is_whitelisted(name))
+			 {
+				 call_ProcessUtility PROCESS_UTILITY_ARGS;
+				 return;
+			 }
+			 else
+				 EREPORT_EXTENSION_IS_NOT_WHITELISTED("Installing")
+			 break;
+
+		case T_AlterExtensionStmt:
+			name = ((AlterExtensionStmt *)parsetree)->extname;
+
+			 if (extension_is_whitelisted(name))
+			 {
+				 call_ProcessUtility PROCESS_UTILITY_ARGS;
+				 return;
+			 }
+			 else
+				 EREPORT_EXTENSION_IS_NOT_WHITELISTED("Altering")
+			 break;
+
+		case T_DropStmt:
+			if (((DropStmt *)parsetree)->removeType == OBJECT_EXTENSION)
+			{
+				/* DROP EXTENSION can target several of them at once */
+				ListCell *lc;
+
+				foreach(lc, ((DropStmt *)parsetree)->objects)
+				{
+					/*
+					 * For deconstructing the object list into actual names,
+					 * see the get_object_address_unqualified() function in
+					 * src/backend/catalog/objectaddress.c
+					 */
+					List *objname = lfirst(lc);
+					name = strVal(linitial(objname));
+
+					if (!extension_is_whitelisted(name))
+						EREPORT_EXTENSION_IS_NOT_WHITELISTED("Dropping")
+				}
+				call_ProcessUtility PROCESS_UTILITY_ARGS;
+				return;
+			}
+			break;
+
+			/* We intentionnaly don't support that command. */
+		case T_AlterExtensionContentsStmt:
+		default:
+			break;
+	}
+
+	/*
+	 * We can only fall here if we don't want to support the command, so pass
+	 * control over to the usual processing.
+	 */
+	call_ProcessUtility PROCESS_UTILITY_ARGS;
 }
 
 /*
- * UPDATE pg_roles SET rolsuper = ? WHERE oid = GetUserId();
- *
- * It's somewhat ugly but I don't see any way to avoid doing that without being
- * superuser or patching the backend sources.
+ * Change current user and security context as if running a SECURITY DEFINER
+ * procedure owned by a superuser, hard coded as the bootstrap user.
  */
 static void
-UpdateCurrentRoleToSuperuser(bool issuper)
+call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 {
-	Datum		new_record[Natts_pg_authid];
-	bool		new_record_nulls[Natts_pg_authid];
-	bool		new_record_repl[Natts_pg_authid];
-	Relation	pg_authid_rel;
-	TupleDesc	pg_authid_dsc;
-	HeapTuple	tuple,
-				new_tuple;
-	char       *role = GetUserNameFromId(GetUserId());
+	Oid			save_userid;
+	int			save_sec_context;
 
-	/*
-	 * Scan the pg_authid relation to be certain the user exists.
-	 */
-	pg_authid_rel = heap_open(AuthIdRelationId, RowExclusiveLock);
-	pg_authid_dsc = RelationGetDescr(pg_authid_rel);
+	GetUserIdAndSecContext(&save_userid, &save_sec_context);
 
-	tuple = SearchSysCache1(AUTHNAME, PointerGetDatum(role));
-	if (!HeapTupleIsValid(tuple))
-		ereport(ERROR,
-				(errcode(ERRCODE_UNDEFINED_OBJECT),
-				 errmsg("role \"%s\" does not exist", role)));
+	SetUserIdAndSecContext(BOOTSTRAP_SUPERUSERID,
+						   save_sec_context
+						   | SECURITY_LOCAL_USERID_CHANGE
+						   | SECURITY_RESTRICTED_OPERATION);
 
-	/*
-	 * Build an updated tuple, perusing the information just obtained
-	 */
-	MemSet(new_record, 0, sizeof(new_record));
-	MemSet(new_record_nulls, false, sizeof(new_record_nulls));
-	MemSet(new_record_repl, false, sizeof(new_record_repl));
+	if (prev_ProcessUtility)
+		prev_ProcessUtility PROCESS_UTILITY_ARGS;
+	else
+		standard_ProcessUtility PROCESS_UTILITY_ARGS;
 
-	new_record[Anum_pg_authid_rolsuper - 1] = BoolGetDatum(issuper);
-	new_record_repl[Anum_pg_authid_rolsuper - 1] = true;
-
-	new_record[Anum_pg_authid_rolcatupdate - 1] = BoolGetDatum(issuper);
-	new_record_repl[Anum_pg_authid_rolcatupdate - 1] = true;
-
-	new_tuple = heap_modify_tuple(tuple, pg_authid_dsc, new_record,
-								  new_record_nulls, new_record_repl);
-	simple_heap_update(pg_authid_rel, &tuple->t_self, new_tuple);
-
-	/* Update indexes */
-	CatalogUpdateIndexes(pg_authid_rel, new_tuple);
-
-	ReleaseSysCache(tuple);
-	heap_freetuple(new_tuple);
-	heap_close(pg_authid_rel, NoLock);
-
-	/* force refresh last_roleid_is_super in superuser.c */
-	CallSyscacheCallbacks(AUTHOID, (Datum) 0);
-	CommandCounterIncrement();
+	SetUserIdAndSecContext(save_userid, save_sec_context);
 }

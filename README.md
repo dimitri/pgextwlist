@@ -3,8 +3,18 @@
 This extension implements extension whitelisting, and will actively prevent
 users from installing extensions not in the provided list. Also, this
 extension implements a form of `sudo` facility in that the whitelisted
-extensions will get installed as if superuser. Privileges are droped before
-handing the control back to the user.
+extensions will get installed as if *superuser*. Privileges are droped
+before handing the control back to the user.
+
+The operations `CREATE EXTENSION`, `DROP EXTENSION` and `ALTER EXTENSION ...
+UPDATE` are run by *superuser*. The `ALTER EXTENSION ... ADD|DROP` command
+is intentionnaly not supported so as not to allow users to modify an already
+installed extension. That means that it's not currently possible to `CREATE
+EXTENSION ... FROM 'unpackaged';`.
+
+Note that the extension script is running as if run by a stored procedure
+owned by your *bootstrap superuser* and with `SECURITY DEFINER`, meaning
+that the extension and all its objects are owned by this *superuser*.
 
 ## Install
 
@@ -34,7 +44,8 @@ that performs the extension installing, and the error behavior.
 
 * `local_preload_libraries`
 
-  Add `pgextwlist` to the `local_preload_libraries` setting.
+  Add `pgextwlist` to the `local_preload_libraries` setting. Don't forget to
+  add the module in the `$plugin` directory.
 
 * `custom_variable_classes`
 
@@ -118,9 +129,5 @@ Even if you're not superuser:
 The whitelisting works by overloading the `ProcessUtility_hook` and gaining
 control each time a utility statement is issued. When this statement is a
 `CREATE EXTENSION`, the extension's name is extracted from the `parsetree`
-and checked against the whitelist.
-
-The `sudo` part is not pretty. We edit the `rolsuper` attribute directly in
-the catalogs then force a cache refresh and a `CommandCounterIncrement()` so
-that next commands consider we are a superuser. Then we edit the `rolsuper`
-attribute back to what it was before our command.
+and checked against the whitelist. *Superuser* is obtained as in the usual
+`SECURITY DEFINER` case, except hard coded to target the *bootstrap user*.
