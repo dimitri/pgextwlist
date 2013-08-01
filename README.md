@@ -27,8 +27,8 @@ If that's not the case:
 1. install the server development packages (on Ubuntu, this would look like `apt-get install postgresql-server-dev-all`)
 2. then:
 
-    make
-    sudo make install
+    make USE_PGXS=1
+    sudo make USE_PGXS=1 install
 
 This will generate a `pgextwlist.so` shared library that you will have to
 install in
@@ -36,6 +36,12 @@ install in
     `pg_config --libdir`/plugins
 
 so that your backend loads it automatically.
+
+This is the preferred approach to installing pgextwlist. Alternatively, you may
+build pgextwlist from the contrib subdirectory of the main PostgreSQL source
+code tree. In that case, the pgextlist directory should be moved into contrib/
+before building, and the above instructions should be followed with
+`USE_PGXS=1` ommitted.
 
 ## Setup
 
