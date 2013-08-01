@@ -251,7 +251,10 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 	 * We can only fall here if we don't want to support the command, so pass
 	 * control over to the usual processing.
 	 */
-	call_ProcessUtility PROCESS_UTILITY_ARGS;
+	if (prev_ProcessUtility)
+		prev_ProcessUtility PROCESS_UTILITY_ARGS;
+	else
+		standard_ProcessUtility PROCESS_UTILITY_ARGS;
 }
 
 /*
