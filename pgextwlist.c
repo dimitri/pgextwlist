@@ -103,6 +103,7 @@ void		_PG_fini(void);
 
 static void extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS;
 static void call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS;
+static void call_RawProcessUtility PROCESS_UTILITY_PROTO_ARGS;
 
 /*
  * _PG_init()			- library load-time initialization
@@ -187,7 +188,7 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 	/* Don't try to make life hard for our friendly superusers. */
 	if (superuser())
 	{
-		call_ProcessUtility PROCESS_UTILITY_ARGS;
+		call_RawProcessUtility PROCESS_UTILITY_ARGS;
 		return;
 	}
 
@@ -251,10 +252,7 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 	 * We can only fall here if we don't want to support the command, so pass
 	 * control over to the usual processing.
 	 */
-	if (prev_ProcessUtility)
-		prev_ProcessUtility PROCESS_UTILITY_ARGS;
-	else
-		standard_ProcessUtility PROCESS_UTILITY_ARGS;
+	call_RawProcessUtility PROCESS_UTILITY_ARGS;
 }
 
 /*
@@ -274,10 +272,16 @@ call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 						   | SECURITY_LOCAL_USERID_CHANGE
 						   | SECURITY_RESTRICTED_OPERATION);
 
+	call_RawProcessUtility PROCESS_UTILITY_ARGS;
+
+	SetUserIdAndSecContext(save_userid, save_sec_context);
+}
+
+static void
+call_RawProcessUtility PROCESS_UTILITY_PROTO_ARGS
+{
 	if (prev_ProcessUtility)
 		prev_ProcessUtility PROCESS_UTILITY_ARGS;
 	else
 		standard_ProcessUtility PROCESS_UTILITY_ARGS;
-
-	SetUserIdAndSecContext(save_userid, save_sec_context);
 }
