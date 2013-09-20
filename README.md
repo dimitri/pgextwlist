@@ -19,7 +19,7 @@ that the extension and all its objects are owned by this *superuser*.
 ## Licence
 
 The `pgextwlist` PostgreSQL extension is released under
-[http://www.postgresql.org/about/licence/](The PostgreSQL Licence), a
+[The PostgreSQL Licence](http://www.postgresql.org/about/licence/), a
 liberal Open Source license, similar to the BSD or MIT licenses.
 
 ## Install
