@@ -2,14 +2,17 @@
  *
  * Author: Dimitri Fontaine <dimitri@2ndQuadrant.fr>
  * Licence: PostgreSQL
- * Copyright Dimitri Fontaine, 2011
+ * Copyright Dimitri Fontaine, 2011-2013
  *
- * For a description of the features see the README.asciidoc file from the same
+ * For a description of the features see the README.md file from the same
  * distribution.
  */
 
 #include <stdio.h>
+#include <unistd.h>
 #include "postgres.h"
+
+#include "utils.h"
 
 #include "access/genam.h"
 #include "access/heapam.h"
@@ -21,6 +24,7 @@
 #include "catalog/pg_authid.h"
 #include "catalog/pg_database.h"
 #include "catalog/pg_db_role_setting.h"
+#include "catalog/namespace.h"
 #include "commands/comment.h"
 #include "commands/dbcommands.h"
 #include "commands/seclabel.h"
@@ -34,6 +38,7 @@
 #include "utils/builtins.h"
 #include "utils/fmgroids.h"
 #include "utils/inval.h"
+#include "utils/lsyscache.h"
 #include "utils/syscache.h"
 #include "utils/timestamp.h"
 #include "utils/tqual.h"
@@ -63,7 +68,8 @@
 
 PG_MODULE_MAGIC;
 
-static char *extwlist_extensions = NULL;
+char *extwlist_extensions = NULL;
+char *extwlist_custom_path = NULL;
 
 static ProcessUtility_hook_type prev_ProcessUtility = NULL;
 
@@ -135,6 +141,26 @@ _PG_init(void)
   }
   PG_END_TRY();
 
+  PG_TRY();
+  {
+    extwlist_custom_path = GetConfigOptionByName("extwlist.custom_path", NULL);
+  }
+  PG_CATCH();
+  {
+	  DefineCustomStringVariable("extwlist.custom_path",
+								 "Directory where to load custom scripts from",
+								 "",
+								 &extwlist_custom_path,
+								 "",
+								 PGC_SUSET,
+								 GUC_NOT_IN_SAMPLE,
+								 NULL,
+								 NULL,
+								 NULL);
+    EmitWarningsOnPlaceholders("extwlist.custom_path");
+  }
+  PG_END_TRY();
+
   prev_ProcessUtility = ProcessUtility_hook;
   ProcessUtility_hook = extwlist_ProcessUtility;
 }
@@ -147,6 +173,47 @@ _PG_fini(void)
 {
 	/* Uninstall hook */
 	ProcessUtility_hook = prev_ProcessUtility;
+}
+
+/*
+ * Extension Whitelisting includes mechanisms to run custom scripts before and
+ * after the extension's provided script.
+ *
+ * We lookup scripts at the following places and run them when they exist:
+ *
+ *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql
+ *  ${extwlist_custom_path}/${extname}/${when}--${action}.sql
+ *
+ * - action is expected to be either "create" or "update"
+ * - when   is expected to be either "before" or "after"
+ *
+ * We don't validation the extension's name before building the scripts path
+ * here because the extension name we are dealing with must have already been
+ * added to the whitelist, which should be enough of a validation step.
+ */
+static void
+call_extension_scripts(const char *extname,
+					   const char *schema,
+					   const char *action,
+					   const char *when,
+					   const char *from_version,
+					   const char *version)
+{
+	char *specific_custom_script =
+		get_specific_custom_script_filename(extname, when,
+											from_version, version);
+
+	char *generic_custom_script =
+		get_generic_custom_script_filename(extname, action, when);
+
+	elog(DEBUG1, "Considering custom script \"%s\"", specific_custom_script);
+	elog(DEBUG1, "Considering custom script \"%s\"", generic_custom_script);
+
+	if (access(specific_custom_script, F_OK) == 0)
+		execute_custom_script(specific_custom_script, schema);
+
+	else if (access(generic_custom_script, F_OK) == 0)
+		execute_custom_script(generic_custom_script, schema);
 }
 
 static bool
@@ -184,6 +251,9 @@ static void
 extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 {
 	char	*name = NULL;
+	char    *schema = NULL;
+	char    *old_version = NULL;
+	char    *new_version = NULL;
 
 	/* Don't try to make life hard for our friendly superusers. */
 	if (superuser())
@@ -195,28 +265,53 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 	switch (nodeTag(parsetree))
 	{
 		case T_CreateExtensionStmt:
-			 name = ((CreateExtensionStmt *)parsetree)->extname;
+		{
+			CreateExtensionStmt *stmt = (CreateExtensionStmt *)parsetree;
+			name = stmt->extname;
+			fill_in_extension_properties(name, stmt->options,
+										 &schema, &old_version, &new_version);
 
-			 if (extension_is_whitelisted(name))
-			 {
-				 call_ProcessUtility PROCESS_UTILITY_ARGS;
-				 return;
-			 }
-			 else
-				 EREPORT_EXTENSION_IS_NOT_WHITELISTED("Installing")
-			 break;
+			if (extension_is_whitelisted(name))
+			{
+				call_extension_scripts(name, schema, "create", "before",
+									   old_version, new_version);
+
+				call_ProcessUtility PROCESS_UTILITY_ARGS;
+
+				call_extension_scripts(name, schema, "create", "after",
+									   old_version, new_version);
+				return;
+			}
+			else
+				EREPORT_EXTENSION_IS_NOT_WHITELISTED("Installing")
+					break;
+		}
 
 		case T_AlterExtensionStmt:
-			name = ((AlterExtensionStmt *)parsetree)->extname;
+		{
+			AlterExtensionStmt *stmt = (AlterExtensionStmt *)parsetree;
+			name = stmt->extname;
+			fill_in_extension_properties(name, stmt->options,
+										 &schema, &old_version, &new_version);
 
-			 if (extension_is_whitelisted(name))
-			 {
-				 call_ProcessUtility PROCESS_UTILITY_ARGS;
-				 return;
-			 }
-			 else
-				 EREPORT_EXTENSION_IS_NOT_WHITELISTED("Altering")
-			 break;
+			/* fetch old_version from the catalogs, actually */
+			old_version = get_extension_current_version(name);
+
+			if (extension_is_whitelisted(name))
+			{
+				call_extension_scripts(name, schema, "update", "before",
+									   old_version, new_version);
+
+				call_ProcessUtility PROCESS_UTILITY_ARGS;
+
+				call_extension_scripts(name, schema, "update", "after",
+									   old_version, new_version);
+				return;
+			}
+			else
+				EREPORT_EXTENSION_IS_NOT_WHITELISTED("Altering")
+					break;
+		}
 
 		case T_DropStmt:
 			if (((DropStmt *)parsetree)->removeType == OBJECT_EXTENSION)

@@ -62,6 +62,10 @@ that performs the extension installing, and the error behavior.
 
   List of extensions allowed for installation.
 
+* `extwlist.custom_path`
+
+  Filesystem path where to look for *custom scripts*.
+
 ## Usage
 
 That's quite simple:
@@ -129,7 +133,68 @@ Even if you're not superuser:
     dim=> drop extension hstore;
     drop extension hstore;
     DROP EXTENSION
-  
+
+## Custom Scripts
+
+Some extensions are installing objects that only the *superuser* can make
+use of by default, it's then a good idea to tweak permissions and grant
+usage to the *current_user* or even the *database owner*, depending.
+
+The custom scripts feature allows to do that by providing scripts to be run
+around the execution of the extension's script itself.
+
+#### create extension custom scripts
+
+For the creation of extension `extname` version `1.0` the following scripts
+will be used when they do exist, as shown here:
+
+  #. `${extwlist.custom_path}/extname/before--1.0.sql`
+
+  #. `${extwlist.custom_path}/extname/before-create.sql`, only when the
+     previous one, specific to the version being installed, does not exists.
+	
+  #. The `CREATE EXTENSION` command now runs normally
+
+  #. `${extwlist.custom_path}/extname/after--1.0.sql`
+
+  #. `${extwlist.custom_path}/extname/after-create.sql`
+
+#### alter extension update custom scripts
+
+For the update of extension `extname` from version `1.0` to version `1.1`
+the following scripts will be used when they do exist, as shown here:
+
+  #. `${extwlist.custom_path}/extname/before--1.0--1.1.sql`
+
+  #. `${extwlist.custom_path}/extname/before-update.sql`, only when the
+   previous one does not exists.
+	
+  #. The `ALTER EXTENSION UPDATE` command now runs normally
+
+  #. `${extwlist.custom_path}/extname/after--1.0--1.1.sql`
+
+  #. `${extwlist.custom_path}/extname/after-update.sql` only when the
+     previous one, specific to the versions being considered, does not
+     exists.
+
+#### custom scripts templating
+
+Before executing them, the *extwlist* extension applies the following
+substitions to the *custom scripts*:
+
+  - any line that begins with `\echo` is removed,
+
+  - the literal `@extschema@` is unconditionnaly replaced by the current
+    schema being used to create the extension objects,
+
+  - the literal `@current_user@` is replaced by the name of the current
+    user,
+	
+  - the literal `@database_owner` is replaced by the name of the current
+    database owner.
+
+Tip: remember that you can execute `DO` blocks if you need dynamic sql.
+
 ## Internals
 
 The whitelisting works by overloading the `ProcessUtility_hook` and gaining
