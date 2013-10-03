@@ -190,7 +190,7 @@ substitions to the *custom scripts*:
   - the literal `@current_user@` is replaced by the name of the current
     user,
 	
-  - the literal `@database_owner` is replaced by the name of the current
+  - the literal `@database_owner@` is replaced by the name of the current
     database owner.
 
 Tip: remember that you can execute `DO` blocks if you need dynamic sql.
