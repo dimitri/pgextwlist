@@ -77,22 +77,22 @@ void		_PG_init(void);
 void		_PG_fini(void);
 
 #if PG_MAJOR_VERSION < 903
-#define PROCESS_UTILITY_PROTO_ARGS (Node *parsetree, const char *queryString, \
+#define PROCESS_UTILITY_PROTO_ARGS Node *parsetree, const char *queryString,  \
 									ParamListInfo params, bool isTopLevel,    \
-									DestReceiver *dest, char *completionTag)
+									DestReceiver *dest, char *completionTag
 
-#define PROCESS_UTILITY_ARGS (parsetree, queryString, params, \
-                              isTopLevel, dest, completionTag)
+#define PROCESS_UTILITY_ARGS parsetree, queryString, params, \
+                              isTopLevel, dest, completionTag
 #else
-#define PROCESS_UTILITY_PROTO_ARGS (Node *parsetree,                   \
+#define PROCESS_UTILITY_PROTO_ARGS Node *parsetree,                    \
 										const char *queryString,       \
 										ProcessUtilityContext context, \
 										ParamListInfo params,          \
 										DestReceiver *dest,            \
-										char *completionTag)
+										char *completionTag
 
-#define PROCESS_UTILITY_ARGS (parsetree, queryString, context, \
-                              params, dest, completionTag)
+#define PROCESS_UTILITY_ARGS parsetree, queryString, context, \
+                              params, dest, completionTag
 #endif	/* PG_MAJOR_VERSION */
 
 #define EREPORT_EXTENSION_IS_NOT_WHITELISTED(op)						\
@@ -107,9 +107,14 @@ void		_PG_fini(void);
 						 "See: SHOW extwlist.extensions;")));
 
 
-static void extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS;
-static void call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS;
-static void call_RawProcessUtility PROCESS_UTILITY_PROTO_ARGS;
+static void extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS);
+static void call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
+								const char *name,
+								const char *schema,
+								const char *old_version,
+								const char *new_version,
+								const char *action);
+static void call_RawProcessUtility(PROCESS_UTILITY_PROTO_ARGS);
 
 /*
  * _PG_init()			- library load-time initialization
@@ -248,7 +253,7 @@ extension_is_whitelisted(const char *name)
  * ProcessUtility hook
  */
 static void
-extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
+extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 {
 	char	*name = NULL;
 	char    *schema = NULL;
@@ -258,7 +263,7 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 	/* Don't try to make life hard for our friendly superusers. */
 	if (superuser())
 	{
-		call_RawProcessUtility PROCESS_UTILITY_ARGS;
+		call_RawProcessUtility(PROCESS_UTILITY_ARGS);
 		return;
 	}
 
@@ -273,13 +278,9 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 
 			if (extension_is_whitelisted(name))
 			{
-				call_extension_scripts(name, schema, "create", "before",
-									   old_version, new_version);
-
-				call_ProcessUtility PROCESS_UTILITY_ARGS;
-
-				call_extension_scripts(name, schema, "create", "after",
-									   old_version, new_version);
+				call_ProcessUtility(PROCESS_UTILITY_ARGS,
+									name, schema,
+									old_version, new_version, "create");
 				return;
 			}
 			else
@@ -299,13 +300,9 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 
 			if (extension_is_whitelisted(name))
 			{
-				call_extension_scripts(name, schema, "update", "before",
-									   old_version, new_version);
-
-				call_ProcessUtility PROCESS_UTILITY_ARGS;
-
-				call_extension_scripts(name, schema, "update", "after",
-									   old_version, new_version);
+				call_ProcessUtility(PROCESS_UTILITY_ARGS,
+									name, schema,
+									old_version, new_version, "update");
 				return;
 			}
 			else
@@ -332,7 +329,8 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 					if (!extension_is_whitelisted(name))
 						EREPORT_EXTENSION_IS_NOT_WHITELISTED("Dropping")
 				}
-				call_ProcessUtility PROCESS_UTILITY_ARGS;
+				call_ProcessUtility(PROCESS_UTILITY_ARGS,
+									NULL, NULL, NULL, NULL, NULL);
 				return;
 			}
 			break;
@@ -347,7 +345,7 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 	 * We can only fall here if we don't want to support the command, so pass
 	 * control over to the usual processing.
 	 */
-	call_RawProcessUtility PROCESS_UTILITY_ARGS;
+	call_RawProcessUtility(PROCESS_UTILITY_ARGS);
 }
 
 /*
@@ -355,7 +353,12 @@ extwlist_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
  * procedure owned by a superuser, hard coded as the bootstrap user.
  */
 static void
-call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
+call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
+					const char *name,
+					const char *schema,
+					const char *old_version,
+					const char *new_version,
+					const char *action)
 {
 	Oid			save_userid;
 	int			save_sec_context;
@@ -367,16 +370,24 @@ call_ProcessUtility PROCESS_UTILITY_PROTO_ARGS
 						   | SECURITY_LOCAL_USERID_CHANGE
 						   | SECURITY_RESTRICTED_OPERATION);
 
-	call_RawProcessUtility PROCESS_UTILITY_ARGS;
+	if (action)
+		call_extension_scripts(name, schema, action,
+							   "before", old_version, new_version);
+
+	call_RawProcessUtility(PROCESS_UTILITY_ARGS);
+
+	if (action)
+		call_extension_scripts(name, schema, action,
+							   "after", old_version, new_version);
 
 	SetUserIdAndSecContext(save_userid, save_sec_context);
 }
 
 static void
-call_RawProcessUtility PROCESS_UTILITY_PROTO_ARGS
+call_RawProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 {
 	if (prev_ProcessUtility)
-		prev_ProcessUtility PROCESS_UTILITY_ARGS;
+		prev_ProcessUtility(PROCESS_UTILITY_ARGS);
 	else
-		standard_ProcessUtility PROCESS_UTILITY_ARGS;
+		standard_ProcessUtility(PROCESS_UTILITY_ARGS);
 }
