@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include "postgres.h"
 
+#include "pgextwlist.h"
 #include "utils.h"
 
 #include "access/genam.h"
@@ -53,19 +54,6 @@
  * It should be "deprecated" in 9.2 and following thanks to command triggers,
  * and the extension mechanism it works with didn't exist before 9.1.
  */
-#ifdef PG_VERSION_NUM
-#define PG_MAJOR_VERSION (PG_VERSION_NUM / 100)
-#else
-#error "Unknown PostgreSQL version"
-#endif
-
-#if PG_MAJOR_VERSION != 901    \
-	&& PG_MAJOR_VERSION != 902 \
-	&& PG_MAJOR_VERSION != 903 \
-	&& PG_MAJOR_VERSION != 904
-#error "Unsupported postgresql version"
-#endif
-
 PG_MODULE_MAGIC;
 
 char *extwlist_extensions = NULL;

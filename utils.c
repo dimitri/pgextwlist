@@ -18,9 +18,15 @@
 
 #include "postgres.h"
 
+#include "pgextwlist.h"
 #include "utils.h"
 
+#if PG_MAJOR_VERSION >= 903
 #include "access/htup_details.h"
+#else
+#include "access/htup.h"
+#endif
+
 #include "access/xact.h"
 #include "catalog/indexing.h"
 #include "catalog/namespace.h"
@@ -401,12 +407,21 @@ execute_sql_string(const char *sql, const char *filename)
 			}
 			else
 			{
+#if PG_MAJOR_VERSION == 903
 				ProcessUtility(stmt,
 							   sql,
 							   PROCESS_UTILITY_QUERY,
 							   NULL,
 							   dest,
 							   NULL);
+#elif PG_MAJOR_VERSION < 903
+				ProcessUtility(stmt,
+							   sql,
+							   NULL,
+							   false,		/* not top level */
+							   dest,
+							   NULL);
+#endif
 			}
 
 			PopActiveSnapshot();
@@ -468,11 +483,19 @@ execute_custom_script(const char *filename, const char *schemaName)
 	if (client_min_messages < WARNING)
 		(void) set_config_option("client_min_messages", "warning",
 								 PGC_USERSET, PGC_S_SESSION,
-								 GUC_ACTION_SAVE, true, 0);
+								 GUC_ACTION_SAVE, true
+#if PG_MAJOR_VERSION > 901
+								 , 0
+#endif
+			);
 	if (log_min_messages < WARNING)
 		(void) set_config_option("log_min_messages", "warning",
 								 PGC_SUSET, PGC_S_SESSION,
-								 GUC_ACTION_SAVE, true, 0);
+								 GUC_ACTION_SAVE, true
+#if PG_MAJOR_VERSION > 901
+								 , 0
+#endif
+			);
 
 	/*
 	 * Set up the search path to contain the target schema, then the schemas
@@ -489,7 +512,11 @@ execute_custom_script(const char *filename, const char *schemaName)
 
 	(void) set_config_option("search_path", pathbuf.data,
 							 PGC_USERSET, PGC_S_SESSION,
-							 GUC_ACTION_SAVE, true, 0);
+							 GUC_ACTION_SAVE, true
+#if PG_MAJOR_VERSION > 901
+							 , 0
+#endif
+		);
 
 	PG_TRY();
 	{
