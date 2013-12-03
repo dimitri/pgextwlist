@@ -271,9 +271,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 									old_version, new_version, "create");
 				return;
 			}
-			else
-				EREPORT_EXTENSION_IS_NOT_WHITELISTED("Installing")
-					break;
+			break;
 		}
 
 		case T_AlterExtensionStmt:
@@ -293,15 +291,14 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 									old_version, new_version, "update");
 				return;
 			}
-			else
-				EREPORT_EXTENSION_IS_NOT_WHITELISTED("Altering")
-					break;
+			break;
 		}
 
 		case T_DropStmt:
 			if (((DropStmt *)parsetree)->removeType == OBJECT_EXTENSION)
 			{
 				/* DROP EXTENSION can target several of them at once */
+				bool all_in_whitelist = true;
 				ListCell *lc;
 
 				foreach(lc, ((DropStmt *)parsetree)->objects)
@@ -311,15 +308,28 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 					 * see the get_object_address_unqualified() function in
 					 * src/backend/catalog/objectaddress.c
 					 */
+					bool whitelisted = false;
 					List *objname = lfirst(lc);
 					name = strVal(linitial(objname));
 
-					if (!extension_is_whitelisted(name))
-						EREPORT_EXTENSION_IS_NOT_WHITELISTED("Dropping")
+					whitelisted = extension_is_whitelisted(name);
+					all_in_whitelist = all_in_whitelist && whitelisted;
 				}
-				call_ProcessUtility(PROCESS_UTILITY_ARGS,
-									NULL, NULL, NULL, NULL, NULL);
-				return;
+
+				/*
+				 * If we have a mix of whitelisted and non-whitelisted
+				 * extensions in a single DROP EXTENSION command, better play
+				 * safe and do the DROP without superpowers.
+				 *
+				 * So we only give superpowers when all extensions are in the
+				 * whitelist.
+				 */
+				if (all_in_whitelist)
+				{
+					call_ProcessUtility(PROCESS_UTILITY_ARGS,
+										NULL, NULL, NULL, NULL, NULL);
+					return;
+				}
 			}
 			break;
 
