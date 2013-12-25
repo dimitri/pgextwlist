@@ -24,13 +24,7 @@ liberal Open Source license, similar to the BSD or MIT licenses.
 
 ## Install
 
-You should have received that as a debian package or equivalent:
-
-    apt-get install postgresql-9.1-extension-whitelist
-
-If that's not the case:
-
-1. install the server development packages (on Ubuntu, this would look like `apt-get install postgresql-server-dev-all`)
+1. Install the server development packages (on Ubuntu, this would look like `apt-get install postgresql-server-dev-all`)
 2. then:
 
     make
