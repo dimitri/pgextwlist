@@ -1,1 +1,4 @@
+*.o
 pgextwlist.so
+.deps
+.vagrant

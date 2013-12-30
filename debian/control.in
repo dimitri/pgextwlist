@@ -1,0 +1,20 @@
+Source: pgextwlist
+Priority: extra
+Maintainer: Dimitri Fontaine <dimitri@2ndQuadrant.fr>
+Build-Depends: debhelper (>= 8.0.0), postgresql-server-dev-all (>= 148~)
+Standards-Version: 3.9.3
+Section: libs
+Homepage: https://github.com/dimitri/pgextwlist
+Vcs-Git: https://github.com/dimitri/pgextwlist.git
+Vcs-Browser: https://github.com/dimitri/pgextwlist
+
+Package: postgresql-PGVERSION-pgextwlist
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-PGVERSION
+Description: PostgreSQL Extension Whitelisting
+ This extension implements extension whitelisting, and will actively prevent
+ users from installing extensions not in the provided list. Also, this
+ extension implements a form of sudo facility in that the whitelisted
+ extensions will get installed as if superuser. Privileges are droped before
+ handing the control back to the user.

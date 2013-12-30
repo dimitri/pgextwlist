@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+PKGVERS = $(shell dpkg-parsechangelog | awk -F '[:-]' '/^Version:/ { print substr($$2, 2) }')
+EXCLUDE = --exclude-vcs --exclude=debian --exclude=build
+
+include /usr/share/postgresql-common/pgxs_debian_control.mk
+clean: debian/control
+
+.PHONY: debian/control
+
+override_dh_auto_build:
+	# do nothing
+
+override_dh_auto_install:
+	# do nothing
+
+override_dh_install:
+	# build all supported versions
+	+pg_buildext loop postgresql-%v-pgextwlist
+	# remove docs that belong elsewhere
+	rm -rf debian/*/usr/share/doc/postgresql-doc-*
+
+override_dh_installdocs:
+	dh_installdocs --all README.md
+
+orig: clean
+	cd .. && tar czf pgextwlist_$(PKGVERS).orig.tar.gz $(EXCLUDE) pgextwlist
+
+%:
+	dh $@ 
