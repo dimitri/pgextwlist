@@ -1,0 +1,10 @@
+CREATE ROLE evil_user;
+SET ROLE mere_mortal;
+CREATE TABLE mere_table (t citext);
+SET ROLE evil_user;
+DROP EXTENSION citext;
+ERROR:  cannot drop extension citext because other objects depend on it
+DETAIL:  table mere_table column t depends on type citext
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+DROP EXTENSION citext CASCADE;
+NOTICE:  drop cascades to table mere_table column t

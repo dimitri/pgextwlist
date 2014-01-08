@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+for v in $(pg_buildext supported-versions); do
+	mkdir -p /usr/lib/postgresql/$v/lib/plugins
+	test -e /usr/lib/postgresql/$v/lib/plugins/pgextwlist.so || \
+		ln -s ../pgextwlist.so /usr/lib/postgresql/$v/lib/plugins
+
+	if ! pg_virtualenv -c --createclusterconf=$PWD/debian/tests/createcluster.conf -v $v \
+		make installcheck PG_CONFIG=/usr/lib/postgresql/$v/bin/pg_config; then
+		if [ -r regression.diffs ]; then
+			echo "**** regression.diffs ****"
+			cat regression.diffs
+		fi
+		exit 1
+	fi
+done

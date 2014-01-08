@@ -7,6 +7,7 @@ Section: libs
 Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
+XS-Testsuite: autopkgtest
 
 Package: postgresql-PGVERSION-pgextwlist
 Section: libs

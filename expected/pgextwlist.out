@@ -1,0 +1,74 @@
+CREATE ROLE mere_mortal;
+SET ROLE mere_mortal;
+SHOW extwlist.extensions;
+     extwlist.extensions      
+------------------------------
+ citext,earthdistance,pg_trgm
+(1 row)
+
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ plpgsql | 1.0
+(1 row)
+
+-- pre-existing extension
+CREATE EXTENSION plpgsql;
+ERROR:  extension "plpgsql" already exists
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ plpgsql | 1.0
+(1 row)
+
+-- non-whitelisted extension
+CREATE EXTENSION hstore;
+ERROR:  permission denied to create extension "hstore"
+HINT:  Must be superuser to create this extension.
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ plpgsql | 1.0
+(1 row)
+
+-- whitelisted extensions
+CREATE EXTENSION citext;
+CREATE EXTENSION pg_trgm;
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ citext  | 1.0
+ pg_trgm | 1.1
+ plpgsql | 1.0
+(3 rows)
+
+-- whitelisted extension, but dependency is missing
+CREATE EXTENSION earthdistance;
+ERROR:  required extension "cube" is not installed
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ citext  | 1.0
+ pg_trgm | 1.1
+ plpgsql | 1.0
+(3 rows)
+
+-- drop whitelisted extension
+DROP EXTENSION pg_trgm;
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ citext  | 1.0
+ plpgsql | 1.0
+(2 rows)
+
+-- drop non-whitelisted extension
+DROP EXTENSION plpgsql;
+ERROR:  must be owner of extension plpgsql
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+ extname | extversion 
+---------+------------
+ citext  | 1.0
+ plpgsql | 1.0
+(2 rows)
+
