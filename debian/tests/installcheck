@@ -7,7 +7,9 @@ for v in $(pg_buildext supported-versions); do
 	test -e /usr/lib/postgresql/$v/lib/plugins/pgextwlist.so || \
 		ln -s ../pgextwlist.so /usr/lib/postgresql/$v/lib/plugins
 
-	if ! pg_virtualenv -c --createclusterconf=$PWD/debian/tests/createcluster.conf -v $v \
+	CCC="$PWD/debian/tests/createcluster.conf"
+	[ "$v" = "9.1" ] && CCC="$PWD/debian/tests/createcluster-9.1.conf"
+	if ! pg_virtualenv -s -c --createclusterconf=$CCC -v $v \
 		make installcheck PG_CONFIG=/usr/lib/postgresql/$v/bin/pg_config; then
 		if [ -r regression.diffs ]; then
 			echo "**** regression.diffs ****"
