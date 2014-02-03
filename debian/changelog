@@ -1,6 +1,7 @@
 pgextwlist (1.2-1) UNRELEASED; urgency=medium
 
   * Add regression tests and run them using autopkgtest.
+  * Include the plugins/pgextwlist.so symlink in the package.
 
  -- Christoph Berg <christoph.berg@credativ.de>  Wed, 08 Jan 2014 11:14:34 +0100
 
