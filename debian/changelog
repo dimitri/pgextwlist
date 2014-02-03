@@ -1,3 +1,9 @@
+pgextwlist (1.2-1) UNRELEASED; urgency=medium
+
+  * Add regression tests and run them using autopkgtest.
+
+ -- Christoph Berg <christoph.berg@credativ.de>  Wed, 08 Jan 2014 11:14:34 +0100
+
 pgextwlist (1.1-1) unstable; urgency=low
 
   * Initial release
