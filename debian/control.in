@@ -1,7 +1,8 @@
 Source: pgextwlist
 Priority: extra
 Maintainer: Dimitri Fontaine <dimitri@2ndQuadrant.fr>
-Build-Depends: debhelper (>= 8.0.0), postgresql-server-dev-all (>= 148~)
+Uploaders: Christoph Berg <myon@debian.org>
+Build-Depends: debhelper (>= 8.0.0), postgresql-server-dev-all (>= 153~)
 Standards-Version: 3.9.5
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist

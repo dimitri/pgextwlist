@@ -3,9 +3,9 @@
 set -e
 
 for v in $(pg_buildext supported-versions); do
-	CCC="$PWD/debian/tests/createcluster.conf"
-	[ "$v" = "9.1" ] && CCC="$PWD/debian/tests/createcluster-9.1.conf"
-	if ! pg_virtualenv -s -c --createclusterconf=$CCC -v $v \
+	PGOPTS="-o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm"
+	[ "$v" = "9.1" ] && PGOPTS="$PGOPTS -o custom_variable_classes=extwlist"
+	if ! pg_virtualenv -v $v $PGOPTS \
 		make installcheck PG_CONFIG=/usr/lib/postgresql/$v/bin/pg_config; then
 		if [ -r regression.diffs ]; then
 			echo "**** regression.diffs ****"
