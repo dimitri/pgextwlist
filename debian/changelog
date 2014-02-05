@@ -1,9 +1,10 @@
-pgextwlist (1.2-1) UNRELEASED; urgency=medium
+pgextwlist (1.2-1) unstable; urgency=medium
 
   * Add regression tests and run them using autopkgtest.
   * Include the plugins/pgextwlist.so symlink in the package.
+  * Add watch file.
 
- -- Christoph Berg <christoph.berg@credativ.de>  Wed, 08 Jan 2014 11:14:34 +0100
+ -- Christoph Berg <christoph.berg@credativ.de>  Wed, 05 Feb 2014 15:25:54 +0100
 
 pgextwlist (1.1-1) unstable; urgency=low
 
