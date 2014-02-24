@@ -35,7 +35,7 @@ liberal Open Source license, similar to the BSD or MIT licenses.
 This will generate a `pgextwlist.so` shared library that you will have to
 install in
 
-    `pg_config --libdir`/plugins
+    `pg_config --pkglibdir`/plugins
 
 so that your backend loads it automatically.
 
