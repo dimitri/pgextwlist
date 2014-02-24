@@ -24,11 +24,13 @@ liberal Open Source license, similar to the BSD or MIT licenses.
 
 ## Install
 
-1. Install the server development packages (on Ubuntu, this would look like `apt-get install postgresql-server-dev-all`)
-2. then:
+ 1. Install the server development packages (on Ubuntu, this would look like
+    `apt-get install postgresql-server-dev-all`)
 
-    make
-    sudo make install
+ 2. then:
+
+        make
+        sudo make install
 
 This will generate a `pgextwlist.so` shared library that you will have to
 install in
