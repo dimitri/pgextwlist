@@ -3,7 +3,7 @@
 This extension implements extension whitelisting, and will actively prevent
 users from installing extensions not in the provided list. Also, this
 extension implements a form of `sudo` facility in that the whitelisted
-extensions will get installed as if *superuser*. Privileges are droped
+extensions will get installed as if *superuser*. Privileges are dropped
 before handing the control back to the user.
 
 The operations `CREATE EXTENSION`, `DROP EXTENSION` and `ALTER EXTENSION ...
