@@ -2,7 +2,7 @@ Source: pgextwlist
 Priority: extra
 Maintainer: Debian PostgreSQL Maintainers <pkg-postgresql-public@lists.alioth.debian.org>
 Uploaders: Dimitri Fontaine <dimitri@2ndQuadrant.fr>, Christoph Berg <myon@debian.org>
-Build-Depends: debhelper (>= 8.0.0), postgresql-server-dev-all (>= 153~)
+Build-Depends: debhelper (>= 9), postgresql-server-dev-all (>= 158~)
 Standards-Version: 3.9.5
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
