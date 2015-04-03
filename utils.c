@@ -46,6 +46,7 @@
 #include "utils/rel.h"
 #include "utils/snapmgr.h"
 #include "utils/syscache.h"
+#include "utils/tqual.h"
 
 /*
  * Parse contents of primary or auxiliary control file, and fill in
@@ -187,7 +188,7 @@ get_extension_current_version(const char *extname)
 				CStringGetDatum(extname));
 
 	extScan = systable_beginscan(extRel, ExtensionNameIndexId, true,
-								 NULL, 1, key);
+								 SnapshotSelf, 1, key);
 
 	extTup = systable_getnext(extScan);
 
