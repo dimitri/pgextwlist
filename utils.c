@@ -16,6 +16,9 @@
  * context of the Extension Whitelisting Extension.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "postgres.h"
 
 #include "pgextwlist.h"
@@ -303,8 +306,33 @@ read_custom_script_file(const char *filename)
 	char	   *src_str;
 	char	   *dest_str;
 	int			len;
+	FILE	   *fp;
+	struct stat fst;
+	size_t	    nbytes;
 
-	content = read_binary_file(filename, 0, -1);
+	/* read_binary_file was made static in 9.5 so we'll reimplement the logic here */
+	if ((fp = AllocateFile(filename, PG_BINARY_R)) == NULL)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not open file \"%s\" for reading: %m",
+					filename)));
+
+	if (fstat(fileno(fp), &fst) < 0)
+		ereport(ERROR,
+			(errcode_for_file_access(),
+			 errmsg("could not stat file \"%s\" %m",
+					filename)));
+
+	content = (bytea *) palloc((Size) fst.st_size + VARHDRSZ);
+	nbytes = fread(VARDATA(content), 1, (size_t) fst.st_size, fp);
+
+	if (ferror(fp))
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not read file \"%s\": %m", filename)));
+
+	FreeFile(fp);
+	SET_VARSIZE(content, nbytes + VARHDRSZ);
 
 	/* use database encoding */
 	src_encoding = dest_encoding;
@@ -455,7 +483,11 @@ get_current_database_owner_name()
 	else
 		return NULL;
 
-	return GetUserNameFromId(owner);
+	return GetUserNameFromId(owner
+#if PG_MAJOR_VERSION >= 905
+							, false
+#endif
+	);
 }
 
 /*
@@ -485,16 +517,22 @@ execute_custom_script(const char *filename, const char *schemaName)
 		(void) set_config_option("client_min_messages", "warning",
 								 PGC_USERSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true
-#if PG_MAJOR_VERSION > 901
+#if PG_MAJOR_VERSION >= 902
 								 , 0
+#endif
+#if PG_MAJOR_VERSION >= 905
+								 , false
 #endif
 			);
 	if (log_min_messages < WARNING)
 		(void) set_config_option("log_min_messages", "warning",
 								 PGC_SUSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true
-#if PG_MAJOR_VERSION > 901
+#if PG_MAJOR_VERSION >= 902
 								 , 0
+#endif
+#if PG_MAJOR_VERSION >= 905
+								 , false
 #endif
 			);
 
@@ -514,8 +552,11 @@ execute_custom_script(const char *filename, const char *schemaName)
 	(void) set_config_option("search_path", pathbuf.data,
 							 PGC_USERSET, PGC_S_SESSION,
 							 GUC_ACTION_SAVE, true
-#if PG_MAJOR_VERSION > 901
+#if PG_MAJOR_VERSION >= 902
 							 , 0
+#endif
+#if PG_MAJOR_VERSION >= 905
+								 , false
 #endif
 		);
 
@@ -554,7 +595,11 @@ execute_custom_script(const char *filename, const char *schemaName)
 									t_sql,
 									CStringGetTextDatum("@current_user@"),
 									CStringGetTextDatum(
-										GetUserNameFromId(GetUserId())));
+										GetUserNameFromId(GetUserId()
+#if PG_MAJOR_VERSION >= 905
+														  , false
+#endif
+										)));
 
 		/*
 		 * substitute the database owner for occurrences of @database_owner@
