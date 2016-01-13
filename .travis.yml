@@ -1,0 +1,27 @@
+language: cpp
+sudo: required
+dist: trusty
+env:
+  - DIST=precise
+  - DIST=trusty
+before_install:
+  - curl -L https://alioth.debian.org/scm/loggerhead/pkg-postgresql/postgresql-common/trunk/download/head:/apt.postgresql.org.s-20130224224205-px3qyst90b3xp8zj-1/apt.postgresql.org.sh | sudo bash
+  - sudo apt-get -y install postgresql-server-dev-all devscripts rsync build-essential dh-make
+before_script:
+  - make clean
+script:
+  - make
+before_deploy:
+  - pg_buildext updatecontrol
+  - make deb
+deploy:
+  - provider: packagecloud
+    dist: ubuntu/$DIST
+    package_glob: build/*.deb
+    username: heroku
+    repository: dod
+    token:
+      secure: Rw79hHuth3NMchjddRfZrbfDwRgJDUC88ITs7Y1pmLQtIyCV43PVwk3vBZ3OC/gJaBcLpDrH+mhkA4wxUSktRu6U8jwWpFGAFdtG7KR/7otaQyK+4e+E2dGr684UlvVTG688sh5Kc/q38pjvc3gI6irTITHImY8t/jNyAJf2ES58QZUopF/nEMbr7z/oudyNfB3ZBcLTnyqr7SB74jbZy4W0FdUDtdsja9KRf2Cc3/13gDIVCgZ4OJSUkfGdlWbvx6WXqDc/BiY1RDU6YP1IUGdNnfA2K9iIfBSkBKWvANrf15UR7YtXbWp1rkXzXlirkhY9iBC8wBKdl/M05xSFkOT0JcYI6vndB/qAXUOL8dt5G+GXO4pXkls7GnZN8N96mG5+xKmgcWPas/vwkzcygslwJC60Kez4A5CspLtead4drHcuaLTJtLox8fMLxHtmMWJAtwDfhW40kCrR9RCE97FEJBW6Pa8qiVt9sjsPhvQfWtp9r1gWqOyUUoR3VmrGNEwJZQXN8suIkenmHPerqMVnrx7KNYFQUtdWsG8d6WDEq6R64LJgmGGJ3ixi8afW3LUAuDg6qw1lz0peCOn+X4XA7WhWRcTbkvNgbswvjZmtJiq2wGym74YD4H477bNT/mps3dUlwm8AddUOcae26bBfUA9+p5cB1j55STq+eZ0=
+    skip_cleanup: true
+notifications:
+  email: false
