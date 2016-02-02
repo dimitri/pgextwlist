@@ -1,6 +1,6 @@
 pgextwlist (1.4-1) unstable; urgency=medium
 
-  * New upstream version with 9.5 support.
+  * New upstream version with 9.5 support. (Closes: #811135)
 
  -- Christoph Berg <christoph.berg@credativ.de>  Tue, 02 Feb 2016 12:56:49 +0100
 
