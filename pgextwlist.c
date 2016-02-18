@@ -116,7 +116,11 @@ _PG_init(void)
 {
   PG_TRY();
   {
-    extwlist_extensions = GetConfigOptionByName("extwlist.extensions", NULL);
+    extwlist_extensions = GetConfigOptionByName("extwlist.extensions", NULL
+#if PG_MAJOR_VERSION >= 906
+												, false
+#endif
+												);
   }
   PG_CATCH();
   {
@@ -136,7 +140,11 @@ _PG_init(void)
 
   PG_TRY();
   {
-    extwlist_custom_path = GetConfigOptionByName("extwlist.custom_path", NULL);
+    extwlist_custom_path = GetConfigOptionByName("extwlist.custom_path", NULL
+#if PG_MAJOR_VERSION >= 906
+												, false
+#endif
+												);
   }
   PG_CATCH();
   {
