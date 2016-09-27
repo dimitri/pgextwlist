@@ -1,3 +1,9 @@
+pgextwlist (1.5-1) unstable; urgency=medium
+
+  * New upstream version with 9.6 support.
+
+ -- Christoph Berg <myon@debian.org>  Tue, 27 Sep 2016 18:39:03 +0200
+
 pgextwlist (1.4-1) unstable; urgency=medium
 
   * New upstream version with 9.5 support. (Closes: #811135)
