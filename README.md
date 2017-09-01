@@ -52,7 +52,7 @@ that performs the extension installing, and the error behavior.
 * `custom_variable_classes`
 
   Add `extwlist` to the `custom_variable_classes` setting if you're using
-  9.1, in 9.2 this setting disapeared.
+  9.1, in 9.2 this setting disappeared.
 
 * `extwlist.extensions`
 
