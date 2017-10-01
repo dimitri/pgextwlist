@@ -394,19 +394,31 @@ execute_sql_string(const char *sql, const char *filename)
 	 */
 	foreach(lc1, raw_parsetree_list)
 	{
+#if PG_MAJOR_VERSION >= 1000
+		RawStmt	   *parsetree = lfirst_node(RawStmt, lc1);
+#else
 		Node	   *parsetree = (Node *) lfirst(lc1);
+#endif
 		List	   *stmt_list;
 		ListCell   *lc2;
 
 		stmt_list = pg_analyze_and_rewrite(parsetree,
 										   sql,
 										   NULL,
-										   0);
+										   0
+#if PG_MAJOR_VERSION >= 1000
+										   , NULL
+#endif
+										   );
 		stmt_list = pg_plan_queries(stmt_list, 0, NULL);
 
 		foreach(lc2, stmt_list)
 		{
+#if PG_MAJOR_VERSION >= 1000
+			PlannedStmt *stmt = lfirst_node(PlannedStmt, lc2);
+#else
 			Node	   *stmt = (Node *) lfirst(lc2);
+#endif
 
 			if (IsA(stmt, TransactionStmt))
 				ereport(ERROR,
@@ -425,10 +437,18 @@ execute_sql_string(const char *sql, const char *filename)
 				qdesc = CreateQueryDesc((PlannedStmt *) stmt,
 										sql,
 										GetActiveSnapshot(), NULL,
-										dest, NULL, 0);
+										dest, NULL,
+#if PG_MAJOR_VERSION >= 1000
+										NULL,
+#endif
+										0);
 
 				ExecutorStart(qdesc, 0);
-				ExecutorRun(qdesc, ForwardScanDirection, 0);
+				ExecutorRun(qdesc, ForwardScanDirection, 0
+#if PG_MAJOR_VERSION >= 1000
+					, true
+#endif
+				);
 				ExecutorFinish(qdesc);
 				ExecutorEnd(qdesc);
 
@@ -436,21 +456,20 @@ execute_sql_string(const char *sql, const char *filename)
 			}
 			else
 			{
+				ProcessUtility(stmt,
+							   sql,
 #if PG_MAJOR_VERSION >= 903
-				ProcessUtility(stmt,
-							   sql,
 							   PROCESS_UTILITY_QUERY,
-							   NULL,
-							   dest,
-							   NULL);
-#elif PG_MAJOR_VERSION < 903
-				ProcessUtility(stmt,
-							   sql,
-							   NULL,
-							   false,		/* not top level */
-							   dest,
-							   NULL);
 #endif
+							   NULL,
+#if PG_MAJOR_VERSION >= 1000
+							   NULL,
+#endif
+#if PG_MAJOR_VERSION < 903
+							   false,		/* not top level */
+#endif
+							   dest,
+							   NULL);
 			}
 
 			PopActiveSnapshot();
