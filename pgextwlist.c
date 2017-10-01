@@ -30,7 +30,11 @@
 #include "commands/dbcommands.h"
 #include "commands/seclabel.h"
 #include "commands/user.h"
+#if PG_MAJOR_VERSION >= 1000
+#include "common/md5.h"
+#else
 #include "libpq/md5.h"
+#endif
 #include "funcapi.h"
 #include "miscadmin.h"
 #include "storage/lmgr.h"
@@ -43,6 +47,9 @@
 #include "utils/syscache.h"
 #include "utils/timestamp.h"
 #include "utils/tqual.h"
+#if PG_MAJOR_VERSION >= 1000
+#include "utils/varlena.h"
+#endif
 
 /*
 #define  DEBUG
@@ -71,7 +78,7 @@ void		_PG_fini(void);
 
 #define PROCESS_UTILITY_ARGS parsetree, queryString, params, \
                               isTopLevel, dest, completionTag
-#else
+#elif PG_MAJOR_VERSION < 1000
 #define PROCESS_UTILITY_PROTO_ARGS Node *parsetree,                    \
 										const char *queryString,       \
 										ProcessUtilityContext context, \
@@ -81,6 +88,17 @@ void		_PG_fini(void);
 
 #define PROCESS_UTILITY_ARGS parsetree, queryString, context, \
                               params, dest, completionTag
+#else
+#define PROCESS_UTILITY_PROTO_ARGS PlannedStmt *pstmt,                    \
+										const char *queryString,       \
+										ProcessUtilityContext context, \
+										ParamListInfo params,          \
+										QueryEnvironment *queryEnv,    \
+										DestReceiver *dest,            \
+										char *completionTag
+
+#define PROCESS_UTILITY_ARGS pstmt, queryString, context, \
+                              params, queryEnv, dest, completionTag
 #endif	/* PG_MAJOR_VERSION */
 
 #define EREPORT_EXTENSION_IS_NOT_WHITELISTED(op)						\
@@ -256,6 +274,10 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 	char    *old_version = NULL;
 	char    *new_version = NULL;
 
+#if PG_MAJOR_VERSION >= 1000
+	Node       *parsetree = pstmt->utilityStmt;
+#endif
+
 	/* Don't try to make life hard for our friendly superusers. */
 	if (superuser())
 	{
@@ -318,7 +340,11 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 					 */
 					bool whitelisted = false;
 					List *objname = lfirst(lc);
+#if PG_MAJOR_VERSION < 1000
 					name = strVal(linitial(objname));
+#else
+					name = strVal((Value *) objname);
+#endif
 
 					whitelisted = extension_is_whitelisted(name);
 					all_in_whitelist = all_in_whitelist && whitelisted;
@@ -341,7 +367,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 			}
 			break;
 
-			/* We intentionnaly don't support that command. */
+			/* We intentionally don't support that command. */
 		case T_AlterExtensionContentsStmt:
 		default:
 			break;

@@ -12,6 +12,7 @@
 #define __UTILS_H__
 
 #include "utils/builtins.h"
+#include "nodes/pg_list.h"
 
 #define MAXPGPATH 1024
 
