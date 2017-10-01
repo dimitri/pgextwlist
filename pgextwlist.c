@@ -30,7 +30,6 @@
 #include "commands/dbcommands.h"
 #include "commands/seclabel.h"
 #include "commands/user.h"
-#include "libpq/md5.h"
 #include "funcapi.h"
 #include "miscadmin.h"
 #include "storage/lmgr.h"

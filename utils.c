@@ -394,14 +394,22 @@ execute_sql_string(const char *sql, const char *filename)
 	 */
 	foreach(lc1, raw_parsetree_list)
 	{
+#if PG_VERSION_NUM >= 100000
+		RawStmt	   *parsetree = (RawStmt *) lfirst(lc1);
+#else
 		Node	   *parsetree = (Node *) lfirst(lc1);
+#endif
 		List	   *stmt_list;
 		ListCell   *lc2;
 
 		stmt_list = pg_analyze_and_rewrite(parsetree,
 										   sql,
 										   NULL,
-										   0);
+										   0
+#if PG_VERSION_NUM >= 100000
+										   , NULL
+#endif
+										   );
 		stmt_list = pg_plan_queries(stmt_list, 0, NULL);
 
 		foreach(lc2, stmt_list)
@@ -417,22 +425,33 @@ execute_sql_string(const char *sql, const char *filename)
 
 			PushActiveSnapshot(GetTransactionSnapshot());
 
+#if PG_VERSION_NUM < 100000
 			if (IsA(stmt, PlannedStmt) &&
 				((PlannedStmt *) stmt)->utilityStmt == NULL)
 			{
+#endif
 				QueryDesc  *qdesc;
 
 				qdesc = CreateQueryDesc((PlannedStmt *) stmt,
 										sql,
 										GetActiveSnapshot(), NULL,
-										dest, NULL, 0);
+										dest, NULL,
+#if PG_VERSION_NUM >= 100000
+										NULL,
+#endif
+										0);
 
 				ExecutorStart(qdesc, 0);
-				ExecutorRun(qdesc, ForwardScanDirection, 0);
+				ExecutorRun(qdesc, ForwardScanDirection, 0
+#if PG_VERSION_NUM >= 100000
+								, true
+#endif
+								);
 				ExecutorFinish(qdesc);
 				ExecutorEnd(qdesc);
 
 				FreeQueryDesc(qdesc);
+#if PG_VERSION_NUM < 100000
 			}
 			else
 			{
@@ -452,6 +471,7 @@ execute_sql_string(const char *sql, const char *filename)
 							   NULL);
 #endif
 			}
+#endif
 
 			PopActiveSnapshot();
 		}
