@@ -36,6 +36,8 @@ rm -rf %{buildroot}
 %{?pkglibdir}%{!?pkglibdir:%{_libdir}/pgsql}/pgextwlist.so
 
 %changelog
+* Sun Oct 15 2017 Christoph Berg <myon@debian.org> - 1.6-0
+- New upstream version.
 * Tue Sep 27 2016 Christoph Berg <myon@debian.org> - 1.5-0
 - New upstream version.
 * Tue Feb 02 2016 Christoph Berg <myon@debian.org> - 1.4-0
