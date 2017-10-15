@@ -1,19 +1,19 @@
 Source: pgextwlist
-Priority: extra
+Priority: optional
 Maintainer: Debian PostgreSQL Maintainers <pkg-postgresql-public@lists.alioth.debian.org>
 Uploaders: Dimitri Fontaine <dim@tapoueh.org>, Christoph Berg <myon@debian.org>
 Build-Depends: debhelper (>= 9), postgresql-server-dev-all (>= 171~)
-Standards-Version: 3.9.8
+Standards-Version: 4.1.1
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
 XS-Testsuite: autopkgtest
 
-Package: postgresql-9.6-pgextwlist
+Package: postgresql-10-pgextwlist
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-9.6
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-10
 Description: PostgreSQL Extension Whitelisting
  This extension implements extension whitelisting, and will actively prevent
  users from installing extensions not in the provided list. Also, this
