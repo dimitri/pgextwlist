@@ -1,3 +1,17 @@
+pgextwlist (1.6-1) unstable; urgency=medium
+
+  * New upstream version with PostgreSQL 10 support, patch by
+    Oskari Saarenmaa. (Closes: #876851)
+  * Update Dimitri's email address.
+
+ -- Christoph Berg <myon@debian.org>  Sun, 15 Oct 2017 13:21:54 +0200
+
+pgextwlist (1.5-1) unstable; urgency=medium
+
+  * New upstream version with 9.6 support.
+
+ -- Christoph Berg <myon@debian.org>  Tue, 27 Sep 2016 18:39:03 +0200
+
 pgextwlist (1.4-1) unstable; urgency=medium
 
   * New upstream version with 9.5 support. (Closes: #811135)

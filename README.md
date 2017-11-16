@@ -16,6 +16,8 @@ Note that the extension script is running as if run by a stored procedure
 owned by your *bootstrap superuser* and with `SECURITY DEFINER`, meaning
 that the extension and all its objects are owned by this *superuser*.
 
+[![Build Status](https://travis-ci.org/dimitri/pgextwlist.svg?branch=master)](https://travis-ci.org/dimitri/pgextwlist)
+
 ## Licence
 
 The `pgextwlist` PostgreSQL extension is released under
@@ -52,7 +54,7 @@ that performs the extension installing, and the error behavior.
 * `custom_variable_classes`
 
   Add `extwlist` to the `custom_variable_classes` setting if you're using
-  9.1, in 9.2 this setting disapeared.
+  9.1, in 9.2 this setting disappeared.
 
 * `extwlist.extensions`
 
