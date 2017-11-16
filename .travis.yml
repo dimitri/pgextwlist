@@ -1,17 +1,51 @@
-language: cpp
+language: C
 sudo: required
 dist: trusty
 env:
   - DIST=trusty
+  - PG_SUPPORTED_VERSIONS=9.2
+  - PG_SUPPORTED_VERSIONS=9.3
+  - PG_SUPPORTED_VERSIONS=9.4
+  - PG_SUPPORTED_VERSIONS=9.5
+  - PG_SUPPORTED_VERSIONS=9.6
+  - PG_SUPPORTED_VERSIONS=10
+  - PG_SUPPORTED_VERSIONS=11
 before_install:
-  - curl -L https://alioth.debian.org/scm/loggerhead/pkg-postgresql/postgresql-common/trunk/download/head:/apt.postgresql.org.s-20130224224205-px3qyst90b3xp8zj-1/apt.postgresql.org.sh | sudo bash
-  - sudo apt-get -y install postgresql-server-dev-all devscripts rsync build-essential dh-make
+  # apt.postgresql.org is already configured, we just need to add devel
+  - |
+    DIST=trusty-pgdg
+    case $PG_SUPPORTED_VERSIONS in
+      11)
+      # update pgdg-source.list
+      sudo sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
+      DIST=trusty-pgdg-testing
+      ;;
+    esac
+  - sudo apt-get -qq update
+install:
+  - export DEBIAN_FRONTEND=noninteractive # suppress warnings about deprecated PostgreSQL versions
+  # trusty's pg-srv-dev-all is too old, use -t $DIST to force installation of the pgdg version
+  - sudo apt-get install -t $DIST debhelper fakeroot postgresql-common postgresql-server-dev-all postgresql-server-dev-$PG_SUPPORTED_VERSIONS
+  # install PostgreSQL $PG_SUPPORTED_VERSIONS if not there yet
+  - |
+    if [ ! -x /usr/lib/postgresql/$PG_SUPPORTED_VERSIONS/bin/postgres ]; then
+      sudo /etc/init.d/postgresql stop # stop postgresql again before installing the server
+      sudo apt-get install postgresql-$PG_SUPPORTED_VERSIONS
+    fi
+  # stop the travis-provided cluster
+  - sudo /etc/init.d/postgresql stop
+  - pg_lsclusters
+  - dpkg -l postgresql\* | cat
 before_script:
   - make clean
 script:
   - make
-before_deploy:
   - pg_buildext updatecontrol
+  - dpkg-buildpackage -us -uc -rfakeroot
+  - for deb in ../*.deb; do echo "$deb:"; dpkg-deb --info $deb; dpkg-deb --contents $deb; done
+  - sudo dpkg -i ../*.deb
+  - pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm installcheck
+before_deploy:
   - make deb
 deploy:
   - provider: packagecloud
