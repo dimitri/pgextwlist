@@ -50,7 +50,7 @@ before_deploy:
 deploy:
   - provider: packagecloud
     dist: ubuntu/$DIST
-    package_glob: build/*.deb
+    package_glob: ../build/*.deb
     username: heroku
     repository: dod
     token:
