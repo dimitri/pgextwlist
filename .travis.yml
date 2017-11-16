@@ -2,7 +2,6 @@ language: C
 sudo: required
 dist: trusty
 env:
-  - DIST=trusty
   - PG_SUPPORTED_VERSIONS=9.2
   - PG_SUPPORTED_VERSIONS=9.3
   - PG_SUPPORTED_VERSIONS=9.4
@@ -21,7 +20,7 @@ before_install:
       DIST=trusty-pgdg-testing
       ;;
     esac
-  - sudo apt-get -qq update
+  - sudo apt-get -q update
 install:
   - export DEBIAN_FRONTEND=noninteractive # suppress warnings about deprecated PostgreSQL versions
   # trusty's pg-srv-dev-all is too old, use -t $DIST to force installation of the pgdg version
