@@ -2,7 +2,6 @@ language: cpp
 sudo: required
 dist: trusty
 env:
-  - DIST=precise
   - DIST=trusty
 before_install:
   - curl -L https://alioth.debian.org/scm/loggerhead/pkg-postgresql/postgresql-common/trunk/download/head:/apt.postgresql.org.s-20130224224205-px3qyst90b3xp8zj-1/apt.postgresql.org.sh | sudo bash
