@@ -2,7 +2,6 @@ language: C
 sudo: required
 dist: trusty
 env:
-  - DIST=trusty
   - PG_SUPPORTED_VERSIONS=9.2
   - PG_SUPPORTED_VERSIONS=9.3
   - PG_SUPPORTED_VERSIONS=9.4
