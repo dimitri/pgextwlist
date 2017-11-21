@@ -41,7 +41,7 @@ script:
   - dpkg-buildpackage -us -uc -rfakeroot
   - for deb in ../*.deb; do echo "$deb:"; dpkg-deb --info $deb; dpkg-deb --contents $deb; done
   - sudo dpkg -i ../*.deb
-  - ls -al 
+  - ls -al ../
   - pwd
   - pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm installcheck
 deploy:
