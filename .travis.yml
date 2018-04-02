@@ -1,6 +1,6 @@
 language: C
 sudo: required
-dist: trusty
+dist: xenial
 env:
   - PG_SUPPORTED_VERSIONS=9.2
   - PG_SUPPORTED_VERSIONS=9.3
@@ -9,17 +9,31 @@ env:
   - PG_SUPPORTED_VERSIONS=9.6
   - PG_SUPPORTED_VERSIONS=10
   - PG_SUPPORTED_VERSIONS=11
+  - DIST=trusty
+  - DIST=xenial
 before_install:
   # apt.postgresql.org is already configured, we just need to add devel
   - |
-    DIST=trusty-pgdg
-    case $PG_SUPPORTED_VERSIONS in
-      11)
-      # update pgdg-source.list
-      sudo sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
-      DIST=trusty-pgdg-testing
+    case $DIST in
+      xenial)
+        DIST=xenial-pgdg
+        case $PG_SUPPORTED_VERSIONS in
+          11)
+          # update pgdg-source.list
+          sudo sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
+          DIST=xenial-pgdg-testing
+          ;;
+        esac
+      trusty)
+        DIST=trusty-pgdg
+        case $PG_SUPPORTED_VERSIONS in
+          11)
+          # update pgdg-source.list
+          sudo sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
+          DIST=trusty-pgdg-testing
+          ;;
+        esac
       ;;
-    esac
   - sudo apt-get -q update
 install:
   - export DEBIAN_FRONTEND=noninteractive # suppress warnings about deprecated PostgreSQL versions
