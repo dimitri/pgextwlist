@@ -54,7 +54,6 @@ before_install:
     sudo dpkg -i ../*.deb
     pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm installcheck
 
-    exit 0
   - chmod 755 ../deb-build/build.sh
 script:
   - |
