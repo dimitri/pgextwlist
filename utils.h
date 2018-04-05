@@ -38,4 +38,7 @@ void fill_in_extension_properties(const char *extname,
 
 void execute_custom_script(const char *schemaName, const char *filename);
 
+char *get_current_user_name(void);
+char *get_current_database_owner_name(void);
+
 #endif

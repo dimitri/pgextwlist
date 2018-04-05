@@ -10,6 +10,50 @@ Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
 XS-Testsuite: autopkgtest
 
+Package: postgresql-9.3-pgextwlist
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-9.3
+Description: PostgreSQL Extension Whitelisting
+ This extension implements extension whitelisting, and will actively prevent
+ users from installing extensions not in the provided list. Also, this
+ extension implements a form of sudo facility in that the whitelisted
+ extensions will get installed as if superuser. Privileges are dropped before
+ handing the control back to the user.
+
+Package: postgresql-9.4-pgextwlist
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-9.4
+Description: PostgreSQL Extension Whitelisting
+ This extension implements extension whitelisting, and will actively prevent
+ users from installing extensions not in the provided list. Also, this
+ extension implements a form of sudo facility in that the whitelisted
+ extensions will get installed as if superuser. Privileges are dropped before
+ handing the control back to the user.
+
+Package: postgresql-9.5-pgextwlist
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-9.5
+Description: PostgreSQL Extension Whitelisting
+ This extension implements extension whitelisting, and will actively prevent
+ users from installing extensions not in the provided list. Also, this
+ extension implements a form of sudo facility in that the whitelisted
+ extensions will get installed as if superuser. Privileges are dropped before
+ handing the control back to the user.
+
+Package: postgresql-9.6-pgextwlist
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-9.6
+Description: PostgreSQL Extension Whitelisting
+ This extension implements extension whitelisting, and will actively prevent
+ users from installing extensions not in the provided list. Also, this
+ extension implements a form of sudo facility in that the whitelisted
+ extensions will get installed as if superuser. Privileges are dropped before
+ handing the control back to the user.
+
 Package: postgresql-10-pgextwlist
 Section: libs
 Architecture: any

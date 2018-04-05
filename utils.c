@@ -487,7 +487,7 @@ execute_sql_string(const char *sql, const char *filename)
  *   from pg_roles u join pg_database d on d.datdba = u.oid
  *  where datname = current_database();
  */
-static char *
+char *
 get_current_database_owner_name()
 {
 	HeapTuple	dbtuple;
@@ -505,6 +505,24 @@ get_current_database_owner_name()
 	return GetUserNameFromId(owner
 #if PG_MAJOR_VERSION >= 905
 							, false
+#endif
+	);
+}
+
+/*
+ * get_current_user_name
+ *
+ * get the current effective user ID. translates the oid
+ * to get user name from user oid, returns NULL for nonexistent roleid if noerr
+ * is true.
+ * 
+ */
+char *
+get_current_user_name()
+{
+	return GetUserNameFromId(GetUserId()
+#if PG_MAJOR_VERSION >= 905
+									, false
 #endif
 	);
 }

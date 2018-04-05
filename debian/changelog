@@ -1,3 +1,9 @@
+pgextwlist (1.6-2) unstable; urgency=medium
+
+  * Do not allow non-database owners to make extensions
+
+ -- Lyubo Kamenov <klou@heroku.com>  Thu, 29 Mar 2018 21:17:33 +0000
+
 pgextwlist (1.6-1) unstable; urgency=medium
 
   * New upstream version with PostgreSQL 10 support, patch by

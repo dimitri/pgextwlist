@@ -1,4 +1,5 @@
 CREATE ROLE mere_mortal;
+ALTER DATABASE contrib_regression OWNER TO mere_mortal;
 SET ROLE mere_mortal;
 
 SHOW extwlist.extensions;

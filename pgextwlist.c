@@ -360,9 +360,30 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 				 */
 				if (all_in_whitelist)
 				{
-					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										NULL, NULL, NULL, NULL, NULL);
-					return;
+					char *current_user = get_current_user_name();
+					char *database_owner = get_current_database_owner_name();
+					
+					if(current_user == NULL || database_owner == NULL)
+					{
+						ereport(ERROR,
+								(errcode(ERRCODE_INTERNAL_ERROR), errmsg("Internal Error")));
+						elog(ERROR,
+							"current user (%s) or database owner (%s) is null", current_user, database_owner);
+						return;
+					}
+
+					if(strncmp(database_owner, current_user, strlen(database_owner)) == 0)
+					{
+						call_ProcessUtility(PROCESS_UTILITY_ARGS,
+											NULL, NULL, NULL, NULL, NULL);
+						return;
+					}
+					else {
+						ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+					 		errmsg("Permission denied to drop extension, role %s is not authorized on this database", current_user)));
+						return;
+					}
 				}
 			}
 			break;
