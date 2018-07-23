@@ -1,3 +1,9 @@
+pgextwlist (1.7-1) unstable; urgency=medium
+
+  * New upstream version with PostgreSQL 11 support.
+
+ -- Christoph Berg <christoph.berg@credativ.de>  Mon, 23 Jul 2018 11:53:24 +0200
+
 pgextwlist (1.6-1) unstable; urgency=medium
 
   * New upstream version with PostgreSQL 10 support, patch by
