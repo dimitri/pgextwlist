@@ -1,5 +1,6 @@
 sudo: required
 dist: trusty
+language: C
 services:
   - docker
 env:
@@ -8,11 +9,15 @@ env:
   - PG_SUPPORTED_VERSIONS=9.5 DIST=trusty
   - PG_SUPPORTED_VERSIONS=9.6 DIST=trusty
   - PG_SUPPORTED_VERSIONS=10  DIST=trusty
+  - PG_SUPPORTED_VERSIONS=11  DIST=trusty
+  - PG_SUPPORTED_VERSIONS=12  DIST=trusty
   - PG_SUPPORTED_VERSIONS=9.3 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.4 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.5 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.6 DIST=xenial
   - PG_SUPPORTED_VERSIONS=10  DIST=xenial
+  - PG_SUPPORTED_VERSIONS=11  DIST=xenial
+  - PG_SUPPORTED_VERSIONS=12  DIST=xenial
 before_install:
   - docker pull heroku/dod-package-dev:$DIST
   - mkdir -p ../deb-build ../packages/$DIST
