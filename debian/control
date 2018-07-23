@@ -65,3 +65,14 @@ Description: PostgreSQL Extension Whitelisting
  extensions will get installed as if superuser. Privileges are dropped before
  handing the control back to the user.
 
+Package: postgresql-11-pgextwlist
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-11
+Description: PostgreSQL Extension Whitelisting
+ This extension implements extension whitelisting, and will actively prevent
+ users from installing extensions not in the provided list. Also, this
+ extension implements a form of sudo facility in that the whitelisted
+ extensions will get installed as if superuser. Privileges are dropped before
+ handing the control back to the user.
+

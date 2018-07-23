@@ -29,7 +29,7 @@ before_install:
 
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
     case $PG_SUPPORTED_VERSIONS in
-      11)
+      11|12)
       # update pgdg-source.list
       sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
       export DIST=$DIST-pgdg-testing
