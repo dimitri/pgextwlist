@@ -10,10 +10,10 @@ Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
 XS-Testsuite: autopkgtest
 
-Package: postgresql-10-pgextwlist
+Package: postgresql-11-pgextwlist
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-10
+Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-11
 Description: PostgreSQL Extension Whitelisting
  This extension implements extension whitelisting, and will actively prevent
  users from installing extensions not in the provided list. Also, this

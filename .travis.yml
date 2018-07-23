@@ -20,7 +20,7 @@ before_install:
   - |
     DIST=trusty-pgdg
     case $PG_SUPPORTED_VERSIONS in
-      11)
+      11|12)
       # update pgdg-source.list
       sudo sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
       DIST=trusty-pgdg-testing
