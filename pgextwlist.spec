@@ -33,7 +33,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %doc README.md
-%{?pkglibdir}%{!?pkglibdir:%{_libdir}/pgsql}/pgextwlist.so
+%{?pkglibdir}%{!?pkglibdir:%{_libdir}/pgsql}/
 
 %changelog
 * Sun Oct 15 2017 Christoph Berg <myon@debian.org> - 1.6-0
