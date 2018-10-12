@@ -1,14 +1,13 @@
 Source: pgextwlist
 Priority: optional
-Maintainer: Debian PostgreSQL Maintainers <pkg-postgresql-public@lists.alioth.debian.org>
+Maintainer: Debian PostgreSQL Maintainers <team+postgresql@tracker.debian.org>
 Uploaders: Dimitri Fontaine <dim@tapoueh.org>, Christoph Berg <myon@debian.org>
 Build-Depends: debhelper (>= 9), postgresql-server-dev-all (>= 171~)
-Standards-Version: 4.1.1
+Standards-Version: 4.2.0
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
-XS-Testsuite: autopkgtest
 
 Package: postgresql-9.3-pgextwlist
 Section: libs
