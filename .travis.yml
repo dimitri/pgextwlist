@@ -10,14 +10,12 @@ env:
   - PG_SUPPORTED_VERSIONS=9.6 DIST=trusty
   - PG_SUPPORTED_VERSIONS=10  DIST=trusty
   - PG_SUPPORTED_VERSIONS=11  DIST=trusty
-  - PG_SUPPORTED_VERSIONS=12  DIST=trusty
   - PG_SUPPORTED_VERSIONS=9.3 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.4 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.5 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.6 DIST=xenial
   - PG_SUPPORTED_VERSIONS=10  DIST=xenial
   - PG_SUPPORTED_VERSIONS=11  DIST=xenial
-  - PG_SUPPORTED_VERSIONS=12  DIST=xenial
 before_install:
   - docker pull heroku/dod-package-dev:$DIST
   - mkdir -p ../deb-build ../packages/$DIST
@@ -29,7 +27,7 @@ before_install:
 
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
     case $PG_SUPPORTED_VERSIONS in
-      11|12)
+      11)
       # update pgdg-source.list
       sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
       export DIST=$DIST-pgdg-testing
