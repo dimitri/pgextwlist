@@ -1,3 +1,16 @@
+pgextwlist (1.8-1) unstable; urgency=medium
+
+  * Upload for PostgreSQL 11.
+  * Update PostgreSQL team address.
+
+ -- Christoph Berg <myon@debian.org>  Fri, 12 Oct 2018 13:23:58 +0200
+
+pgextwlist (1.7-1) unstable; urgency=medium
+
+  * New upstream version with PostgreSQL 11 support.
+
+ -- Christoph Berg <christoph.berg@credativ.de>  Mon, 23 Jul 2018 11:53:24 +0200
+
 pgextwlist (1.6-2) unstable; urgency=medium
 
   * Do not allow non-database owners to make extensions
