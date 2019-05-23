@@ -46,7 +46,9 @@
 #include "utils/lsyscache.h"
 #include "utils/syscache.h"
 #include "utils/timestamp.h"
+#if PG_MAJOR_VERSION < 1200
 #include "utils/tqual.h"
+#endif
 #if PG_MAJOR_VERSION >= 1000
 #include "utils/varlena.h"
 #endif
