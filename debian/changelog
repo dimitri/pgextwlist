@@ -1,3 +1,9 @@
+pgextwlist (1.9-1) unstable; urgency=medium
+
+  * New upstream version with PostgreSQL 12 support.
+
+ -- Christoph Berg <myon@debian.org>  Wed, 05 Jun 2019 12:44:56 +0200
+
 pgextwlist (1.8-2) unstable; urgency=medium
 
   * Recompile against new heap_getattr() API in PostgreSQL 11.2.
