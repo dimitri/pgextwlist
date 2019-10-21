@@ -16,15 +16,14 @@ env:
   - PG_SUPPORTED_VERSIONS=9.6 DIST=xenial
   - PG_SUPPORTED_VERSIONS=10  DIST=xenial
   - PG_SUPPORTED_VERSIONS=11  DIST=xenial
+  - PG_SUPPORTED_VERSIONS=12 COMPONENT=12 DIST=xenial
 before_install:
   - docker pull heroku/dod-package-dev:$DIST
   - mkdir -p ../deb-build ../packages/$DIST
   - |
     cat <<'EOF' > ../deb-build/build.sh
     #!/bin/sh -x
-
     export DEBIAN_FRONTEND=noninteractive
-
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
     case $PG_SUPPORTED_VERSIONS in
       11)
@@ -36,27 +35,21 @@ before_install:
       export DIST=$DIST-pgdg
       ;;
     esac
-
     apt-get update -y
     apt-get install -y -t $DIST debhelper fakeroot postgresql-common postgresql-server-dev-all postgresql-server-dev-$PG_SUPPORTED_VERSIONS
-
     if [ ! -x /usr/lib/postgresql/$PG_SUPPORTED_VERSIONS/bin/postgres ]; then
       sudo /etc/init.d/postgresql stop # stop postgresql again before installing the server
       apt-get install -y postgresql-$PG_SUPPORTED_VERSIONS
     fi
-
     /etc/init.d/postgresql stop
     pg_lsclusters
     dpkg -l postgresql\* | cat
-
     cd /root/build/pgextwlist
-
     pg_buildext updatecontrol
     dpkg-buildpackage -us -uc -rfakeroot
     for deb in ../*.deb; do echo "$deb:"; dpkg-deb --info $deb; dpkg-deb --contents $deb; done
     sudo dpkg -i ../*.deb
     pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm installcheck
-
   - chmod 755 ../deb-build/build.sh
 script:
   - |

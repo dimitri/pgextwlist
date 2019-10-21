@@ -1,3 +1,15 @@
+pgextwlist (1.9-1) unstable; urgency=medium
+
+  * New upstream version with PostgreSQL 12 support.
+
+ -- Christoph Berg <myon@debian.org>  Wed, 05 Jun 2019 12:44:56 +0200
+
+pgextwlist (1.8-2) unstable; urgency=medium
+
+  * Recompile against new heap_getattr() API in PostgreSQL 11.2.
+
+ -- Christoph Berg <christoph.berg@credativ.de>  Tue, 12 Feb 2019 15:08:44 +0100
+
 pgextwlist (1.8-1) unstable; urgency=medium
 
   * Upload for PostgreSQL 11.
@@ -11,12 +23,15 @@ pgextwlist (1.7-1) unstable; urgency=medium
 
  -- Christoph Berg <christoph.berg@credativ.de>  Mon, 23 Jul 2018 11:53:24 +0200
 
+<<<<<<< HEAD
 pgextwlist (1.6-2) unstable; urgency=medium
 
   * Do not allow non-database owners to make extensions
 
  -- Lyubo Kamenov <klou@heroku.com>  Thu, 29 Mar 2018 21:17:33 +0000
 
+=======
+>>>>>>> 3db0eda126abc43fc15dbf864652c700541467c9
 pgextwlist (1.6-1) unstable; urgency=medium
 
   * New upstream version with PostgreSQL 10 support, patch by
