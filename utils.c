@@ -607,7 +607,8 @@ execute_custom_script(const char *filename, const char *schemaName)
 		/*
 		 * substitute the target schema name for occurrences of @extschema@.
 		 */
-		t_sql = DirectFunctionCall3(replace_text,
+		t_sql = DirectFunctionCall3Coll(replace_text,
+									C_COLLATION_OID,
 									t_sql,
 									CStringGetTextDatum("@extschema@"),
 									CStringGetTextDatum(qSchemaName));
@@ -615,7 +616,8 @@ execute_custom_script(const char *filename, const char *schemaName)
 		/*
 		 * substitute the current user name for occurrences of @current_user@
 		 */
-		t_sql = DirectFunctionCall3(replace_text,
+		t_sql = DirectFunctionCall3Coll(replace_text,
+									C_COLLATION_OID,
 									t_sql,
 									CStringGetTextDatum("@current_user@"),
 									CStringGetTextDatum(
@@ -628,7 +630,8 @@ execute_custom_script(const char *filename, const char *schemaName)
 		/*
 		 * substitute the database owner for occurrences of @database_owner@
 		 */
-		t_sql = DirectFunctionCall3(replace_text,
+		t_sql = DirectFunctionCall3Coll(replace_text,
+									C_COLLATION_OID,
 									t_sql,
 									CStringGetTextDatum("@database_owner@"),
 									CStringGetTextDatum(
