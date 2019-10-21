@@ -1,3 +1,9 @@
+pgextwlist (1.8-2) unstable; urgency=medium
+
+  * Recompile against new heap_getattr() API in PostgreSQL 11.2.
+
+ -- Christoph Berg <christoph.berg@credativ.de>  Tue, 12 Feb 2019 15:08:44 +0100
+
 pgextwlist (1.8-1) unstable; urgency=medium
 
   * Upload for PostgreSQL 11.
