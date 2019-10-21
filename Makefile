@@ -1,4 +1,4 @@
-short_ver = 1.8
+short_ver = 1.9
 long_ver = $(shell (git describe --tags --long '--match=v*' 2>/dev/null || echo $(short_ver)-0-unknown) | cut -c2-)
 
 MODULE_big = pgextwlist

@@ -30,6 +30,9 @@
 #include "access/htup.h"
 #endif
 
+#include "access/genam.h"
+#include "access/heapam.h"
+#include "access/skey.h"
 #include "access/xact.h"
 #include "catalog/indexing.h"
 #include "catalog/namespace.h"
@@ -49,7 +52,9 @@
 #include "utils/rel.h"
 #include "utils/snapmgr.h"
 #include "utils/syscache.h"
+#if PG_MAJOR_VERSION < 1200
 #include "utils/tqual.h"
+#endif
 
 /*
  * Parse contents of primary or auxiliary control file, and fill in
