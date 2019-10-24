@@ -1,4 +1,4 @@
-pgextwlist (1.9-1) unstable; urgency=medium
+pgextwlist (1.9-2) unstable; urgency=medium
 
   * Patch for collation indeterminism in PostgreSQL 12
 
