@@ -1,5 +1,11 @@
 pgextwlist (1.9-1) unstable; urgency=medium
 
+  * Patch for collation indeterminism in PostgreSQL 12
+
+ -- Bradley Johnson <bradley@heroku.com>  Thu, 24 Oct 2019 19:28:56 +0000
+
+pgextwlist (1.9-1) unstable; urgency=medium
+
   * New upstream version with PostgreSQL 12 support.
 
  -- Christoph Berg <myon@debian.org>  Wed, 05 Jun 2019 12:44:56 +0200
