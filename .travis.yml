@@ -35,4 +35,4 @@ script:
   - dpkg-buildpackage -us -uc -rfakeroot -b
   - for deb in ../*.deb; do echo "$deb:"; dpkg-deb --info $deb; dpkg-deb --contents $deb; done
   - sudo dpkg -i ../*.deb
-  - pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm installcheck
+  - pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm,pg_stat_statements -o extwlist.custom_path=$PWD/test-scripts installcheck
