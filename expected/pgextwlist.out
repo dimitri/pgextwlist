@@ -1,9 +1,9 @@
 CREATE ROLE mere_mortal;
 SET ROLE mere_mortal;
 SHOW extwlist.extensions;
-     extwlist.extensions      
-------------------------------
- citext,earthdistance,pg_trgm
+               extwlist.extensions               
+-------------------------------------------------
+ citext,earthdistance,pg_trgm,pg_stat_statements
 (1 row)
 
 SELECT extname FROM pg_extension ORDER BY 1;
@@ -65,6 +65,16 @@ SELECT extname FROM pg_extension ORDER BY 1;
 -- drop non-whitelisted extension
 DROP EXTENSION plpgsql;
 ERROR:  must be owner of extension plpgsql
+SELECT extname FROM pg_extension ORDER BY 1;
+ extname 
+---------
+ citext
+ plpgsql
+(2 rows)
+
+-- whitelisted extension with custom after-create script
+CREATE EXTENSION pg_stat_statements;
+ERROR:  syntax error at or near "'intentional error here'"
 SELECT extname FROM pg_extension ORDER BY 1;
  extname 
 ---------
