@@ -1,4 +1,4 @@
-pgextwlist (1.10-1) UNRELEASED; urgency=medium
+pgextwlist (1.10-1) unstable; urgency=medium
 
   [ Mika Eloranta ]
   * Use explicit collation for @@ substibutions.
@@ -6,7 +6,7 @@ pgextwlist (1.10-1) UNRELEASED; urgency=medium
   [ Christoph Berg ]
   * Include custom scripts in regression tests.
 
- -- Christoph Berg <myon@debian.org>  Tue, 29 Oct 2019 14:39:57 +0100
+ -- Christoph Berg <myon@debian.org>  Tue, 29 Oct 2019 14:48:29 +0100
 
 pgextwlist (1.9-1) unstable; urgency=medium
 
