@@ -90,7 +90,7 @@ void		_PG_fini(void);
 
 #define PROCESS_UTILITY_ARGS parsetree, queryString, context, \
                               params, dest, completionTag
-#else
+#elif PG_MAJOR_VERSION < 1300
 #define PROCESS_UTILITY_PROTO_ARGS PlannedStmt *pstmt,                    \
 										const char *queryString,       \
 										ProcessUtilityContext context, \
@@ -101,6 +101,17 @@ void		_PG_fini(void);
 
 #define PROCESS_UTILITY_ARGS pstmt, queryString, context, \
                               params, queryEnv, dest, completionTag
+#else
+#define PROCESS_UTILITY_PROTO_ARGS PlannedStmt *pstmt,                    \
+										const char *queryString,       \
+										ProcessUtilityContext context, \
+										ParamListInfo params,          \
+										QueryEnvironment *queryEnv,    \
+										DestReceiver *dest,            \
+										QueryCompletion *qc
+
+#define PROCESS_UTILITY_ARGS pstmt, queryString, context, \
+                              params, queryEnv, dest, qc
 #endif	/* PG_MAJOR_VERSION */
 
 #define EREPORT_EXTENSION_IS_NOT_WHITELISTED(op)						\
