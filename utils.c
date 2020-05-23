@@ -54,6 +54,8 @@
 #include "utils/syscache.h"
 #if PG_MAJOR_VERSION < 1200
 #include "utils/tqual.h"
+#define table_open(r, l) heap_open(r, l)
+#define table_close(r, l) heap_close(r, l)
 #endif
 
 /*
@@ -188,7 +190,7 @@ get_extension_current_version(const char *extname)
     /*
      * Look up the extension --- it must already exist in pg_extension
      */
-	extRel = heap_open(ExtensionRelationId, AccessShareLock);
+	extRel = table_open(ExtensionRelationId, AccessShareLock);
 
 	ScanKeyInit(&key[0],
 				Anum_pg_extension_extname,
@@ -216,7 +218,7 @@ get_extension_current_version(const char *extname)
 
 	systable_endscan(extScan);
 
-	heap_close(extRel, AccessShareLock);
+	table_close(extRel, AccessShareLock);
 
 	return oldVersionName;
 }
@@ -415,7 +417,12 @@ execute_sql_string(const char *sql, const char *filename)
 										   , NULL
 #endif
 										   );
-		stmt_list = pg_plan_queries(stmt_list, 0, NULL);
+		stmt_list = pg_plan_queries(stmt_list,
+#if PG_MAJOR_VERSION >= 1300
+									sql,
+#endif
+									0,
+									NULL);
 
 		foreach(lc2, stmt_list)
 		{
