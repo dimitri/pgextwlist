@@ -1,3 +1,10 @@
+pgextwlist (1.11-1) unstable; urgency=medium
+
+  * New version with PG13 support.
+  * Source format 3.0 (quilt).
+
+ -- Christoph Berg <myon@debian.org>  Sun, 24 May 2020 20:53:50 +0200
+
 pgextwlist (1.10-1) unstable; urgency=medium
 
   [ Mika Eloranta ]
