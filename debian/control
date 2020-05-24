@@ -5,9 +5,9 @@ Uploaders:
  Dimitri Fontaine <dim@tapoueh.org>,
  Christoph Berg <myon@debian.org>,
 Build-Depends:
- debhelper (>= 9),
+ debhelper-compat (= 13),
  postgresql-server-dev-all (>= 171~),
-Standards-Version: 4.2.0
+Standards-Version: 4.5.0
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git

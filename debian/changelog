@@ -2,6 +2,7 @@ pgextwlist (1.11-1) unstable; urgency=medium
 
   * New version with PG13 support.
   * Source format 3.0 (quilt).
+  * DH 13, bump S-V.
 
  -- Christoph Berg <myon@debian.org>  Sun, 24 May 2020 20:53:50 +0200
 
