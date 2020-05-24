@@ -1,8 +1,12 @@
 Source: pgextwlist
 Priority: optional
 Maintainer: Debian PostgreSQL Maintainers <team+postgresql@tracker.debian.org>
-Uploaders: Dimitri Fontaine <dim@tapoueh.org>, Christoph Berg <myon@debian.org>
-Build-Depends: debhelper (>= 9), postgresql-server-dev-all (>= 171~)
+Uploaders:
+ Dimitri Fontaine <dim@tapoueh.org>,
+ Christoph Berg <myon@debian.org>,
+Build-Depends:
+ debhelper (>= 9),
+ postgresql-server-dev-all (>= 171~),
 Standards-Version: 4.2.0
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
@@ -12,7 +16,10 @@ Vcs-Browser: https://github.com/dimitri/pgextwlist
 Package: postgresql-PGVERSION-pgextwlist
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, postgresql-PGVERSION
+Depends:
+ postgresql-PGVERSION,
+ ${misc:Depends},
+ ${shlibs:Depends},
 Description: PostgreSQL Extension Whitelisting
  This extension implements extension whitelisting, and will actively prevent
  users from installing extensions not in the provided list. Also, this
