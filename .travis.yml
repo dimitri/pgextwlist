@@ -23,6 +23,8 @@ before_install:
 
 install:
   - sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -p -v $PG_SUPPORTED_VERSIONS -i
+  # apt.pg.o.sh doesn't install contrib yet
+  - sudo apt-get -y install postgresql-contrib-$PG_SUPPORTED_VERSIONS
 
 script:
   - make PROFILE="-Werror"
