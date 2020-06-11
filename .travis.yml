@@ -1,22 +1,31 @@
 sudo: required
-dist: trusty
-language: C
+os: linux
+dist: focal
+language: c
 services:
   - docker
 env:
-  - PG_SUPPORTED_VERSIONS=9.3 DIST=trusty
-  - PG_SUPPORTED_VERSIONS=9.4 DIST=trusty
-  - PG_SUPPORTED_VERSIONS=9.5 DIST=trusty
-  - PG_SUPPORTED_VERSIONS=9.6 DIST=trusty
-  - PG_SUPPORTED_VERSIONS=10  DIST=trusty
-  - PG_SUPPORTED_VERSIONS=11  DIST=trusty
   - PG_SUPPORTED_VERSIONS=9.3 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.4 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.5 DIST=xenial
   - PG_SUPPORTED_VERSIONS=9.6 DIST=xenial
   - PG_SUPPORTED_VERSIONS=10  DIST=xenial
   - PG_SUPPORTED_VERSIONS=11  DIST=xenial
-  - PG_SUPPORTED_VERSIONS=12 COMPONENT=12 DIST=xenial
+  - PG_SUPPORTED_VERSIONS=12  DIST=xenial
+  - PG_SUPPORTED_VERSIONS=9.3 DIST=bionic
+  - PG_SUPPORTED_VERSIONS=9.4 DIST=bionic
+  - PG_SUPPORTED_VERSIONS=9.5 DIST=bionic
+  - PG_SUPPORTED_VERSIONS=9.6 DIST=bionic
+  - PG_SUPPORTED_VERSIONS=10  DIST=bionic
+  - PG_SUPPORTED_VERSIONS=11  DIST=bionic
+  - PG_SUPPORTED_VERSIONS=12  DIST=bionic
+  - PG_SUPPORTED_VERSIONS=9.3 DIST=focal
+  - PG_SUPPORTED_VERSIONS=9.4 DIST=focal
+  - PG_SUPPORTED_VERSIONS=9.5 DIST=focal
+  - PG_SUPPORTED_VERSIONS=9.6 DIST=focal
+  - PG_SUPPORTED_VERSIONS=10  DIST=focal
+  - PG_SUPPORTED_VERSIONS=11  DIST=focal
+  - PG_SUPPORTED_VERSIONS=12  DIST=focal
 before_install:
   - docker pull heroku/dod-package-dev:$DIST
   - mkdir -p ../deb-build ../packages/$DIST
@@ -25,18 +34,8 @@ before_install:
     #!/bin/sh -x
     export DEBIAN_FRONTEND=noninteractive
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-    case $PG_SUPPORTED_VERSIONS in
-      11)
-      # update pgdg-source.list
-      sed -i -e "s/pgdg.*/pgdg-testing main $PG_SUPPORTED_VERSIONS/" /etc/apt/sources.list.d/pgdg*.list
-      export DIST=$DIST-pgdg-testing
-      ;;
-      *)
-      export DIST=$DIST-pgdg
-      ;;
-    esac
     apt-get update -y
-    apt-get install -y -t $DIST debhelper fakeroot postgresql-common postgresql-server-dev-all postgresql-server-dev-$PG_SUPPORTED_VERSIONS
+    apt-get install -y -t $DIST-pgdg libpq5 libpq-dev clang debhelper fakeroot postgresql-common postgresql-server-dev-all postgresql-server-dev-$PG_SUPPORTED_VERSIONS postgresql-client-$PG_SUPPORTED_VERSIONS
     if [ ! -x /usr/lib/postgresql/$PG_SUPPORTED_VERSIONS/bin/postgres ]; then
       sudo /etc/init.d/postgresql stop # stop postgresql again before installing the server
       apt-get install -y postgresql-$PG_SUPPORTED_VERSIONS
