@@ -6,18 +6,18 @@ Uploaders:
  Christoph Berg <myon@debian.org>,
 Build-Depends:
  debhelper-compat (= 13),
- postgresql-server-dev-all (>= 171~),
+ postgresql-all (>= 219~),
 Standards-Version: 4.5.0
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
 
-Package: postgresql-12-pgextwlist
+Package: postgresql-13-pgextwlist
 Section: libs
 Architecture: any
 Depends:
- postgresql-12,
+ postgresql-13,
  ${misc:Depends},
  ${shlibs:Depends},
 Description: PostgreSQL Extension Whitelisting

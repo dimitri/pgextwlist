@@ -1,33 +1,19 @@
 #!/usr/bin/make -f
 
-PKGVERS = $(shell dpkg-parsechangelog | awk -F '[:-]' '/^Version:/ { print substr($$2, 2) }')
-EXCLUDE = --exclude-vcs --exclude=debian --exclude=build
-
-include /usr/share/postgresql-common/pgxs_debian_control.mk
-clean: debian/control
-
-.PHONY: debian/control
-
-override_dh_auto_build:
-	# do nothing
-
-override_dh_auto_install:
-	# do nothing
-
-override_dh_install:
-	# build all supported versions
-	+pg_buildext loop postgresql-%v-pgextwlist
-	# remove docs that belong elsewhere
-	rm -rf debian/*/usr/share/doc/postgresql-doc-*
-
 override_dh_installdocs:
 	dh_installdocs --all README.md
+	# remove docs that belong elsewhere
+	rm -rf debian/*/usr/share/doc/postgresql-doc-*
 
 override_dh_link:
 	set -ex; for v in $(shell pg_buildext supported-versions); do mkdir debian/postgresql-$$v-pgextwlist/usr/lib/postgresql/$$v/lib/plugins; ln -s ../pgextwlist.so debian/postgresql-$$v-pgextwlist/usr/lib/postgresql/$$v/lib/plugins; done
 
-orig: clean
-	cd .. && tar czf pgextwlist_$(PKGVERS).orig.tar.gz $(EXCLUDE) pgextwlist
+override_dh_pgxs_test:
+	pg_buildext \
+	  -o local_preload_libraries=pgextwlist \
+	  -o extwlist.extensions=citext,earthdistance,pg_trgm,pg_stat_statements \
+	  -o extwlist.custom_path=$(CURDIR)/test-scripts \
+	  installcheck . . postgresql-%v-pgextwlist
 
 %:
-	dh $@ 
+	dh $@ --with pgxs_loop

@@ -1,3 +1,11 @@
+pgextwlist (1.11-2) unstable; urgency=medium
+
+  * Upload for PostgreSQL 13.
+  * Use dh --with pgxs_loop and run tests at build time as well.
+  * debian/tests: Use pg_buildext installcheck.
+
+ -- Christoph Berg <myon@debian.org>  Tue, 06 Oct 2020 15:13:07 +0200
+
 pgextwlist (1.11-1) unstable; urgency=medium
 
   * New version with PG13 support.

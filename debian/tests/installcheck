@@ -2,15 +2,8 @@
 
 set -e
 
-for v in $(pg_buildext supported-versions); do
-	PGOPTS="-o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm,pg_stat_statements -o extwlist.custom_path=$PWD/test-scripts"
-	[ "$v" = "9.1" ] && PGOPTS="$PGOPTS -o custom_variable_classes=extwlist"
-	if ! pg_virtualenv -v $v $PGOPTS \
-		make installcheck PG_CONFIG=/usr/lib/postgresql/$v/bin/pg_config; then
-		if [ -r regression.diffs ]; then
-			echo "**** regression.diffs ****"
-			cat regression.diffs
-		fi
-		exit 1
-	fi
-done
+pg_buildext \
+	-o local_preload_libraries=pgextwlist \
+	-o extwlist.extensions=citext,earthdistance,pg_trgm,pg_stat_statements \
+	-o extwlist.custom_path=$PWD/test-scripts \
+	installcheck
