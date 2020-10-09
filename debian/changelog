@@ -1,3 +1,9 @@
+pgextwlist (1.11-3) unstable; urgency=medium
+
+  * R³: no.
+
+ -- Christoph Berg <myon@debian.org>  Fri, 09 Oct 2020 10:50:24 +0200
+
 pgextwlist (1.11-2) unstable; urgency=medium
 
   * Upload for PostgreSQL 13.

@@ -8,6 +8,7 @@ Build-Depends:
  debhelper-compat (= 13),
  postgresql-all (>= 219~),
 Standards-Version: 4.5.0
+Rules-Requires-Root: no
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git
