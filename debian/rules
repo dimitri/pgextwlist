@@ -9,11 +9,14 @@ override_dh_link:
 	set -ex; for v in $(shell pg_buildext supported-versions); do mkdir debian/postgresql-$$v-pgextwlist/usr/lib/postgresql/$$v/lib/plugins; ln -s ../pgextwlist.so debian/postgresql-$$v-pgextwlist/usr/lib/postgresql/$$v/lib/plugins; done
 
 override_dh_pgxs_test:
+	# work around extension_destdir bug with missing directory
+	set -ex; for v in $(shell pg_buildext supported-versions); do mkdir -p debian/postgresql-$$v-pgextwlist/usr/share/postgresql/$$v/extension; done
 	pg_buildext \
 	  -o local_preload_libraries=pgextwlist \
 	  -o extwlist.extensions=citext,earthdistance,pg_trgm,pg_stat_statements \
 	  -o extwlist.custom_path=$(CURDIR)/test-scripts \
 	  installcheck . . postgresql-%v-pgextwlist
+	rmdir -p --ignore-fail-on-non-empty debian/postgresql-*-pgextwlist/usr/share/postgresql/*/extension
 
 %:
 	dh $@ --with pgxs_loop
