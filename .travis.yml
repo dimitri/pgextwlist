@@ -11,6 +11,9 @@ env:
   - PG_SUPPORTED_VERSIONS=12
   - PG_SUPPORTED_VERSIONS=13
 
+arch:
+ - amd64
+ - ppc64le
 language: c
 os: linux
 dist: focal
