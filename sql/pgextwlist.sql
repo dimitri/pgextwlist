@@ -16,7 +16,9 @@ SELECT extname FROM pg_extension ORDER BY 1;
 -- whitelisted extensions
 CREATE EXTENSION citext;
 CREATE EXTENSION pg_trgm;
+COMMENT ON EXTENSION pg_trgm IS 'pg_trgm comment';
 SELECT extname FROM pg_extension ORDER BY 1;
+SELECT d.description FROM pg_extension e JOIN pg_description d ON d.objoid = e.oid WHERE e.extname = 'pg_trgm';
 
 -- whitelisted extension, but dependency is missing
 CREATE EXTENSION earthdistance;
