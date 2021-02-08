@@ -392,6 +392,25 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 			}
 			break;
 
+		case T_CommentStmt:
+		{
+			CommentStmt* stmt = (CommentStmt *)parsetree;
+			if (stmt->objtype == OBJECT_EXTENSION)
+			{
+#if PG_MAJOR_VERSION < 1000
+				name = strVal(linitial(stmt->objname));
+#else
+				name = strVal((Value *) stmt->object);
+#endif
+				if (extension_is_whitelisted(name))
+				{
+					call_ProcessUtility(PROCESS_UTILITY_ARGS,
+										NULL, NULL, NULL, NULL, NULL);
+					return;
+				}
+			}
+			break;
+		}
 			/* We intentionally don't support that command. */
 		case T_AlterExtensionContentsStmt:
 		default:
