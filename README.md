@@ -6,11 +6,11 @@ extension implements a form of `sudo` facility in that the whitelisted
 extensions will get installed as if *superuser*. Privileges are dropped
 before handing the control back to the user.
 
-The operations `CREATE EXTENSION`, `DROP EXTENSION` and `ALTER EXTENSION ...
-UPDATE` are run by *superuser*. The `ALTER EXTENSION ... ADD|DROP` command
-is intentionnaly not supported so as not to allow users to modify an already
-installed extension. That means that it's not currently possible to `CREATE
-EXTENSION ... FROM 'unpackaged';`.
+The operations `CREATE EXTENSION`, `DROP EXTENSION`, `ALTER EXTENSION ...
+UPDATE`, and `COMMENT ON EXTENSION` are run by *superuser*.
+The `ALTER EXTENSION ... ADD|DROP` command is intentionnaly not supported so
+as not to allow users to modify an already installed extension. That means
+that it's not currently possible to `CREATE EXTENSION ... FROM 'unpackaged';`.
 
 Note that the extension script is running as if run by a stored procedure
 owned by your *bootstrap superuser* and with `SECURITY DEFINER`, meaning
