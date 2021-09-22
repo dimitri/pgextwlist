@@ -470,6 +470,9 @@ execute_sql_string(const char *sql, const char *filename)
 			{
 				ProcessUtility(stmt,
 							   sql,
+#if PG_MAJOR_VERSION >= 1400
+							   false,		/* no need to copy */
+#endif
 #if PG_MAJOR_VERSION >= 903
 							   PROCESS_UTILITY_QUERY,
 #endif
