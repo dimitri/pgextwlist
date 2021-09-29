@@ -1,10 +1,11 @@
-short_ver = 1.9
+short_ver = $(shell git describe --match "v[0-9]*" --abbrev=4 HEAD | cut -d- -f1 | sed 's/^v//')
 long_ver = $(shell (git describe --tags --long '--match=v*' 2>/dev/null || echo $(short_ver)-0-unknown) | cut -c2-)
 
 MODULE_big = pgextwlist
 OBJS       = utils.o pgextwlist.o
 DOCS       = README.md
 REGRESS    = pgextwlist crossuser
+RPM_MINOR_VERSION_SUFFIX ?=
 
 PG_CONFIG = pg_config
 PGXS = $(shell $(PG_CONFIG) --pgxs)
@@ -26,5 +27,5 @@ rpm:
 		--define 'package_prefix $(package_prefix)' \
 		--define 'pkglibdir $(shell $(PG_CONFIG) --pkglibdir)' \
 		--define 'major_version $(short_ver)' \
-		--define 'minor_version $(subst -,.,$(subst $(short_ver)-,,$(long_ver)))'
+		--define 'minor_version $(subst -,.,$(subst $(short_ver)-,,$(long_ver)))$(RPM_MINOR_VERSION_SUFFIX)'
 	$(RM) pgextwlist-rpm-src.tar.gz
