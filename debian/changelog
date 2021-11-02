@@ -1,6 +1,6 @@
 pgextwlist (1.12-1) unstable; urgency=medium
 
-  * New version with PG13 support, thanks Ronan Dunklau!
+  * New version with PG14 support, thanks Ronan Dunklau!
 
  -- Christoph Berg <myon@debian.org>  Tue, 02 Nov 2021 10:26:57 +0100
 
