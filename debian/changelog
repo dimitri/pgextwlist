@@ -1,3 +1,9 @@
+pgextwlist (1.12-1) unstable; urgency=medium
+
+  * New version with PG13 support, thanks Ronan Dunklau!
+
+ -- Christoph Berg <myon@debian.org>  Tue, 02 Nov 2021 10:26:57 +0100
+
 pgextwlist (1.11-4) unstable; urgency=medium
 
   * Work around extension_destdir bug with missing extension directory.
