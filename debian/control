@@ -14,11 +14,11 @@ Homepage: https://github.com/dimitri/pgextwlist
 Vcs-Git: https://github.com/dimitri/pgextwlist.git
 Vcs-Browser: https://github.com/dimitri/pgextwlist
 
-Package: postgresql-13-pgextwlist
+Package: postgresql-14-pgextwlist
 Section: libs
 Architecture: any
 Depends:
- postgresql-13,
+ postgresql-14,
  ${misc:Depends},
  ${shlibs:Depends},
 Description: PostgreSQL Extension Whitelisting
