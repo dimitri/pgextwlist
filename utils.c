@@ -47,6 +47,7 @@
 #include "tcop/pquery.h"
 #include "tcop/utility.h"
 #include "utils/builtins.h"
+#include "utils/memutils.h"
 #include "utils/fmgroids.h"
 #include "utils/lsyscache.h"
 #include "utils/rel.h"
@@ -385,6 +386,10 @@ execute_sql_string(const char *sql, const char *filename)
 	List	   *raw_parsetree_list;
 	DestReceiver *dest;
 	ListCell   *lc1;
+	MemoryContext temp_ctx = AllocSetContextCreate(CurrentMemoryContext,
+												   "temp_script_context",
+												   ALLOCSET_DEFAULT_SIZES);
+	MemoryContext prev_ctx = MemoryContextSwitchTo(temp_ctx);
 
 	/*
 	 * Parse the SQL string into a list of raw parse trees.
@@ -502,6 +507,8 @@ execute_sql_string(const char *sql, const char *filename)
 
 	/* Be sure to advance the command counter after the last script command */
 	CommandCounterIncrement();
+	MemoryContextSwitchTo(prev_ctx);
+	MemoryContextDelete(temp_ctx);
 }
 
 /*
