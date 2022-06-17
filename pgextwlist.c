@@ -365,8 +365,10 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 					List *objname = lfirst(lc);
 #if PG_MAJOR_VERSION < 1000
 					name = strVal(linitial(objname));
-#else
+#elif PG_MAJOR_VERSION < 1500
 					name = strVal((Value *) objname);
+#else
+					name = strVal(castNode(String, objname));
 #endif
 
 					whitelisted = extension_is_whitelisted(name);
