@@ -409,6 +409,14 @@ execute_sql_string(const char *sql, const char *filename)
 		List	   *stmt_list;
 		ListCell   *lc2;
 
+#if PG_MAJOR_VERSION >= 1500
+		stmt_list = pg_analyze_and_rewrite_fixedparams(parsetree,
+													   sql,
+													   NULL,
+													   0,
+													   NULL
+													   );
+#else
 		stmt_list = pg_analyze_and_rewrite(parsetree,
 										   sql,
 										   NULL,
@@ -417,6 +425,7 @@ execute_sql_string(const char *sql, const char *filename)
 										   , NULL
 #endif
 										   );
+#endif
 		stmt_list = pg_plan_queries(stmt_list,
 #if PG_MAJOR_VERSION >= 1300
 									sql,
