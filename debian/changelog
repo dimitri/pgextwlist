@@ -1,3 +1,9 @@
+pgextwlist (1.13-1) unstable; urgency=medium
+
+  * New version with PG15 support, thanks Polina Bungina!
+
+ -- Christoph Berg <myon@debian.org>  Thu, 07 Jul 2022 11:39:12 +0200
+
 pgextwlist (1.12-1) unstable; urgency=medium
 
   * New version with PG14 support, thanks Ronan Dunklau!
