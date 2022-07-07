@@ -1,2 +1,2 @@
 version=4
-https://github.com/dimitri/pgextwlist/releases .*/v(.*).tar.gz
+https://github.com/dimitri/pgextwlist/tags .*/v(.*).tar.gz
