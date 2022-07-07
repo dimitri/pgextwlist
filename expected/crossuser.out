@@ -1,3 +1,4 @@
+GRANT USAGE, CREATE ON SCHEMA public TO public;
 CREATE ROLE evil_user;
 SET ROLE mere_mortal;
 CREATE TABLE mere_table (t citext);
