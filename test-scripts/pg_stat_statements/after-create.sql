@@ -1,1 +1,2 @@
-GRANT EXECUTE ON FUNCTION @extschema@.pg_stat_statements_reset('intentional error here') TO mere_mortal;
+ALTER FUNCTION pg_stat_statements_reset OWNER TO mere_mortal;
+GRANT EXECUTE ON FUNCTION pg_stat_statements_reset TO mere_mortal;

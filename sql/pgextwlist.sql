@@ -33,3 +33,4 @@ SELECT extname FROM pg_extension ORDER BY 1;
 -- whitelisted extension with custom after-create script
 CREATE EXTENSION pg_stat_statements;
 SELECT extname FROM pg_extension ORDER BY 1;
+SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';

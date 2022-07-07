@@ -74,11 +74,17 @@ SELECT extname FROM pg_extension ORDER BY 1;
 
 -- whitelisted extension with custom after-create script
 CREATE EXTENSION pg_stat_statements;
-ERROR:  syntax error at or near "'intentional error here'"
 SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
+      extname       
+--------------------
  citext
+ pg_stat_statements
  plpgsql
-(2 rows)
+(3 rows)
+
+SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
+           proacl            
+-----------------------------
+ {mere_mortal=X/mere_mortal}
+(1 row)
 

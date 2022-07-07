@@ -4,7 +4,7 @@ long_ver = $(shell (git describe --tags --long '--match=v*' 2>/dev/null || echo 
 MODULE_big = pgextwlist
 OBJS       = utils.o pgextwlist.o
 DOCS       = README.md
-REGRESS    = pgextwlist crossuser
+REGRESS    = setup pgextwlist crossuser
 RPM_MINOR_VERSION_SUFFIX ?=
 
 PG_CONFIG = pg_config
