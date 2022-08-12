@@ -399,8 +399,10 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 			{
 #if PG_MAJOR_VERSION < 1000
 				name = strVal(linitial(stmt->objname));
-#else
+#elif PG_MAJOR_VERSION < 1500
 				name = strVal((Value *) stmt->object);
+#else
+				name = strVal(castNode(String, stmt->object));
 #endif
 				if (extension_is_whitelisted(name))
 				{

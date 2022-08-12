@@ -7,10 +7,12 @@ SELECT extname FROM pg_extension ORDER BY 1;
 
 -- pre-existing extension
 CREATE EXTENSION plpgsql;
+COMMENT ON EXTENSION hstore IS 'plpgsql comment';
 SELECT extname FROM pg_extension ORDER BY 1;
 
 -- non-whitelisted extension
 CREATE EXTENSION hstore;
+COMMENT ON EXTENSION hstore IS 'hstore comment';
 SELECT extname FROM pg_extension ORDER BY 1;
 
 -- whitelisted extensions
