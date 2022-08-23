@@ -155,16 +155,6 @@ static void call_RawProcessUtility(PROCESS_UTILITY_PROTO_ARGS);
 void
 _PG_init(void)
 {
-  PG_TRY();
-  {
-    extwlist_extensions = GetConfigOptionByName("extwlist.extensions", NULL
-#if PG_MAJOR_VERSION >= 906
-												, false
-#endif
-												);
-  }
-  PG_CATCH();
-  {
 	  DefineCustomStringVariable("extwlist.extensions",
 								 "List of extensions that are whitelisted",
 								 "Separated by comma",
@@ -175,20 +165,7 @@ _PG_init(void)
 								 NULL,
 								 NULL,
 								 NULL);
-    EmitWarningsOnPlaceholders("extwlist.extensions");
-  }
-  PG_END_TRY();
 
-  PG_TRY();
-  {
-    extwlist_custom_path = GetConfigOptionByName("extwlist.custom_path", NULL
-#if PG_MAJOR_VERSION >= 906
-												, false
-#endif
-												);
-  }
-  PG_CATCH();
-  {
 	  DefineCustomStringVariable("extwlist.custom_path",
 								 "Directory where to load custom scripts from",
 								 "",
@@ -199,9 +176,8 @@ _PG_init(void)
 								 NULL,
 								 NULL,
 								 NULL);
-    EmitWarningsOnPlaceholders("extwlist.custom_path");
-  }
-  PG_END_TRY();
+
+	EmitWarningsOnPlaceholders("extwlist");
 
   prev_ProcessUtility = ProcessUtility_hook;
   ProcessUtility_hook = extwlist_ProcessUtility;
