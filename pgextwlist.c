@@ -155,42 +155,32 @@ static void call_RawProcessUtility(PROCESS_UTILITY_PROTO_ARGS);
 void
 _PG_init(void)
 {
-	  DefineCustomStringVariable("extwlist.extensions",
-								 "List of extensions that are whitelisted",
-								 "Separated by comma",
-								 &extwlist_extensions,
-								 "",
-								 PGC_SUSET,
-								 GUC_NOT_IN_SAMPLE,
-								 NULL,
-								 NULL,
-								 NULL);
+	DefineCustomStringVariable("extwlist.extensions",
+							   "List of extensions that are whitelisted",
+							   "Separated by comma",
+							   &extwlist_extensions,
+							   "",
+							   PGC_SUSET,
+							   GUC_NOT_IN_SAMPLE,
+							   NULL,
+							   NULL,
+							   NULL);
 
-	  DefineCustomStringVariable("extwlist.custom_path",
-								 "Directory where to load custom scripts from",
-								 "",
-								 &extwlist_custom_path,
-								 "",
-								 PGC_SUSET,
-								 GUC_NOT_IN_SAMPLE,
-								 NULL,
-								 NULL,
-								 NULL);
+	DefineCustomStringVariable("extwlist.custom_path",
+							   "Directory where to load custom scripts from",
+							   "",
+							   &extwlist_custom_path,
+							   "",
+							   PGC_SUSET,
+							   GUC_NOT_IN_SAMPLE,
+							   NULL,
+							   NULL,
+							   NULL);
 
 	EmitWarningsOnPlaceholders("extwlist");
 
-  prev_ProcessUtility = ProcessUtility_hook;
-  ProcessUtility_hook = extwlist_ProcessUtility;
-}
-
-/*
- * Module unload callback
- */
-void
-_PG_fini(void)
-{
-	/* Uninstall hook */
-	ProcessUtility_hook = prev_ProcessUtility;
+	prev_ProcessUtility = ProcessUtility_hook;
+	ProcessUtility_hook = extwlist_ProcessUtility;
 }
 
 /*
