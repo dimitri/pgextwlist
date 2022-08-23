@@ -1,3 +1,9 @@
+pgextwlist (1.14-1) unstable; urgency=medium
+
+  * Fix GUC handling in _PG_init.
+
+ -- Christoph Berg <myon@debian.org>  Tue, 23 Aug 2022 17:04:26 +0200
+
 pgextwlist (1.13-1) unstable; urgency=medium
 
   * New version with PG15 support, thanks Polina Bungina!
