@@ -1,0 +1,51 @@
+name: Build and publish
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build_and_publish:
+    strategy:
+      matrix:
+        pg_version: ['9.5', '9.6', '10', '11', '12', '13', '14']
+        os_version: ['xenial', 'focal']
+    runs-on: sfdc-hk-ubuntu-latest
+    env:
+      DIST: ${{ matrix.os_version }}
+      PG_SUPPORTED_VERSIONS: ${{ matrix.pg_version }}
+    steps:
+      - run: |
+          docker pull heroku/dod-package-dev:$DIST
+          mkdir -p ../deb-build ../packages/$DIST
+      - run: |
+          cat <<'EOF' > ../deb-build/build.sh
+          #!/bin/sh -x
+          export DEBIAN_FRONTEND=noninteractive
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update -y
+          sudo apt-get install -y -t $DIST-pgdg libpq5 libpq-dev clang debhelper fakeroot postgresql-common postgresql-server-dev-all postgresql-server-dev-$PG_SUPPORTED_VERSIONS postgresql-client-$PG_SUPPORTED_VERSIONS
+          if [ ! -x /usr/lib/postgresql/$PG_SUPPORTED_VERSIONS/bin/postgres ]; then
+            sudo /etc/init.d/postgresql stop # stop postgresql again before installing the server
+            sudo apt-get install -y postgresql-$PG_SUPPORTED_VERSIONS
+          fi
+          sudo /etc/init.d/postgresql stop
+          pg_lsclusters
+          dpkg -l postgresql\* | cat
+          cd /root/build/pgextwlist
+          pg_buildext updatecontrol
+          dpkg-buildpackage -us -uc -rfakeroot
+          for deb in ../*.deb; do echo "$deb:"; dpkg-deb --info $deb; dpkg-deb --contents $deb; done
+          sudo dpkg -i ../*.deb
+          pg_buildext -i '--locale=C.UTF-8' -o local_preload_libraries=pgextwlist -o extwlist.extensions=citext,earthdistance,pg_trgm installcheck
+      - run: chmod 755 ../deb-build/build.sh
+      - run: |
+          docker run -v $(readlink -f ../deb-build):/root/deb-build \
+                    -v $(readlink -f ../packages/$DIST):/root/build \
+                    -v $(readlink -f .):/root/build/pgextwlist \
+                    -e DIST=$DIST -e PG_SUPPORTED_VERSIONS=$PG_SUPPORTED_VERSIONS \
+                    --privileged=true -it heroku/dod-package-dev:$DIST \
+                    bash -x /root/deb-build/build.sh
+      - run: du -a ../packages/$DIST
