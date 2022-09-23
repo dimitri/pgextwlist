@@ -8,7 +8,7 @@ before handing the control back to the user.
 
 The operations `CREATE EXTENSION`, `DROP EXTENSION`, `ALTER EXTENSION ...
 UPDATE`, and `COMMENT ON EXTENSION` are run by *superuser*.
-The `ALTER EXTENSION ... ADD|DROP` command is intentionnaly not supported so
+The `ALTER EXTENSION ... ADD|DROP` command is intentionally not supported so
 as not to allow users to modify an already installed extension. That means
 that it's not currently possible to `CREATE EXTENSION ... FROM 'unpackaged';`.
 
@@ -178,11 +178,11 @@ the following scripts will be used when they do exist, as shown here:
 #### custom scripts templating
 
 Before executing them, the *extwlist* extension applies the following
-substitions to the *custom scripts*:
+substitutions to the *custom scripts*:
 
   - any line that begins with `\echo` is removed,
 
-  - the literal `@extschema@` is unconditionnaly replaced by the current
+  - the literal `@extschema@` is unconditionally replaced by the current
     schema being used to create the extension objects,
 
   - the literal `@current_user@` is replaced by the name of the current
@@ -191,7 +191,7 @@ substitions to the *custom scripts*:
   - the literal `@database_owner@` is replaced by the name of the current
     database owner.
 
-Tip: remember that you can execute `DO` blocks if you need dynamic sql.
+Tip: remember that you can execute `DO` blocks if you need dynamic SQL.
 
 ## Internals
 

@@ -261,7 +261,7 @@ fill_in_extension_properties(const char *extname,
 		}
 		else
 		{
-			/* intentionnaly don't try and catch errors here */
+			/* intentionally don't try and catch errors here */
 		}
 	}
 
@@ -375,7 +375,7 @@ read_custom_script_file(const char *filename)
  * Note: it's tempting to just use SPI to execute the string, but that does
  * not work very well.	The really serious problem is that SPI will parse,
  * analyze, and plan the whole string before executing any of it; of course
- * this fails if there are any plannable statements referring to objects
+ * this fails if there are any planable statements referring to objects
  * created earlier in the script.  A lesser annoyance is that SPI insists
  * on printing the whole string as errcontext in case of any error, and that
  * could be very long.
