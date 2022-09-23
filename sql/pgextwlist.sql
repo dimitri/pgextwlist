@@ -1,4 +1,3 @@
-CREATE ROLE mere_mortal;
 SET ROLE mere_mortal;
 
 SHOW extwlist.extensions;

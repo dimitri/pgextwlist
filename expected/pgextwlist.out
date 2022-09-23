@@ -1,9 +1,8 @@
-CREATE ROLE mere_mortal;
 SET ROLE mere_mortal;
 SHOW extwlist.extensions;
-               extwlist.extensions               
--------------------------------------------------
- citext,earthdistance,pg_trgm,pg_stat_statements
+                  extwlist.extensions                   
+--------------------------------------------------------
+ citext,earthdistance,pg_trgm,pg_stat_statements,refint
 (1 row)
 
 SELECT extname FROM pg_extension ORDER BY 1;

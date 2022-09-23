@@ -106,7 +106,7 @@ Even if you're not superuser:
     ----------
      f
     (1 row)
-    
+
     dim=> create extension hstore;
     create extension hstore;
     WARNING:  => is deprecated as an operator name
@@ -141,39 +141,51 @@ usage to the *current_user* or even the *database owner*, depending.
 The custom scripts feature allows to do that by providing scripts to be run
 around the execution of the extension's script itself.
 
-#### create extension custom scripts
+#### `create extension` custom scripts
 
 For the creation of extension `extname` version `1.0` the following scripts
 will be used when they do exist, as shown here:
 
-  #. `${extwlist.custom_path}/extname/before--1.0.sql`
+  - `${extwlist.custom_path}/extname/before--1.0.sql`
 
-  #. `${extwlist.custom_path}/extname/before-create.sql`, only when the
+  - `${extwlist.custom_path}/extname/before-create.sql`, only when the
      previous one, specific to the version being installed, does not exists.
-	
-  #. The `CREATE EXTENSION` command now runs normally
 
-  #. `${extwlist.custom_path}/extname/after--1.0.sql`
+  - The `CREATE EXTENSION` command now runs normally
 
-  #. `${extwlist.custom_path}/extname/after-create.sql`
+  - `${extwlist.custom_path}/extname/after--1.0.sql`
 
-#### alter extension update custom scripts
+  - `${extwlist.custom_path}/extname/after-create.sql`, only when the
+    specific one does not exist
+
+#### `alter extension update` custom scripts
 
 For the update of extension `extname` from version `1.0` to version `1.1`
 the following scripts will be used when they do exist, as shown here:
 
-  #. `${extwlist.custom_path}/extname/before--1.0--1.1.sql`
+  - `${extwlist.custom_path}/extname/before--1.0--1.1.sql`
 
-  #. `${extwlist.custom_path}/extname/before-update.sql`, only when the
-   previous one does not exists.
-	
-  #. The `ALTER EXTENSION UPDATE` command now runs normally
+  - `${extwlist.custom_path}/extname/before-update.sql`, only when the
+     specific one does not exists.
 
-  #. `${extwlist.custom_path}/extname/after--1.0--1.1.sql`
+  - The `ALTER EXTENSION UPDATE` command now runs normally
 
-  #. `${extwlist.custom_path}/extname/after-update.sql` only when the
-     previous one, specific to the versions being considered, does not
-     exists.
+  - `${extwlist.custom_path}/extname/after--1.0--1.1.sql`
+
+  - `${extwlist.custom_path}/extname/after-update.sql` only when the
+     specific one does not exists.
+
+#### `comment on extension` and `drop extension` scripts
+
+Similarly:
+
+   - `${extwlist.custom_path}/extname/before-comment.sql`
+   - `${extwlist.custom_path}/extname/after-comment.sql`
+
+   - `${extwlist.custom_path}/extname/before-drop.sql`
+   - `${extwlist.custom_path}/extname/after-drop.sql`
+
+Version-specific hook files are not supported here.
 
 #### custom scripts templating
 
@@ -187,7 +199,7 @@ substitutions to the *custom scripts*:
 
   - the literal `@current_user@` is replaced by the name of the current
     user,
-	
+
   - the literal `@database_owner@` is replaced by the name of the current
     database owner.
 

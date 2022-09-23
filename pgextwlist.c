@@ -54,10 +54,6 @@
 #endif
 
 /*
-#define  DEBUG
- */
-
-/*
  * This code has only been tested with PostgreSQL 9.1.
  *
  * It should be "deprecated" in 9.2 and following thanks to command triggers,
@@ -189,10 +185,12 @@ _PG_init(void)
  *
  * We lookup scripts at the following places and run them when they exist:
  *
- *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql
- *  ${extwlist_custom_path}/${extname}/${when}--${action}.sql
+ *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql (create)
+ *  ${extwlist_custom_path}/${extname}/${when}--${oldversion}--${newversion}.sql (upgrade)
+ *  ${extwlist_custom_path}/${extname}/${when}-${action}--${version}.sql (rest)
+ *  ${extwlist_custom_path}/${extname}/${when}-${action}.sql (all actions)
  *
- * - action is expected to be either "create" or "update"
+ * - action is expected to be one of "create", "update", "comment", or "drop"
  * - when   is expected to be either "before" or "after"
  *
  * We don't validation the extension's name before building the scripts path
@@ -207,20 +205,30 @@ call_extension_scripts(const char *extname,
 					   const char *from_version,
 					   const char *version)
 {
-	char *specific_custom_script =
-		get_specific_custom_script_filename(extname, when,
-											from_version, version);
+	char *specific_custom_script;
+	char *generic_custom_script;
 
-	char *generic_custom_script =
+	if (version)
+	{
+		specific_custom_script =
+			get_specific_custom_script_filename(extname, when,
+												from_version, version);
+
+		elog(DEBUG1, "Considering custom script \"%s\"", specific_custom_script);
+
+		if (access(specific_custom_script, F_OK) == 0)
+		{
+			execute_custom_script(specific_custom_script, schema);
+			return; /* skip generic script */
+		}
+	}
+
+	generic_custom_script =
 		get_generic_custom_script_filename(extname, action, when);
 
-	elog(DEBUG1, "Considering custom script \"%s\"", specific_custom_script);
 	elog(DEBUG1, "Considering custom script \"%s\"", generic_custom_script);
 
-	if (access(specific_custom_script, F_OK) == 0)
-		execute_custom_script(specific_custom_script, schema);
-
-	else if (access(generic_custom_script, F_OK) == 0)
+	if (access(generic_custom_script, F_OK) == 0)
 		execute_custom_script(generic_custom_script, schema);
 }
 
@@ -352,7 +360,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 				if (all_in_whitelist)
 				{
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										NULL, NULL, NULL, NULL, NULL);
+										NULL, NULL, NULL, NULL, "drop");
 					return;
 				}
 			}
@@ -370,10 +378,12 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 #else
 				name = strVal(castNode(String, stmt->object));
 #endif
+
 				if (extension_is_whitelisted(name))
 				{
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										NULL, NULL, NULL, NULL, NULL);
+										name, schema,
+										old_version, new_version, "comment");
 					return;
 				}
 			}
@@ -415,14 +425,61 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 						   | SECURITY_RESTRICTED_OPERATION);
 
 	if (action)
-		call_extension_scripts(name, schema, action,
-							   "before", old_version, new_version);
+	{
+		/* "drop extension" can list several extensions, walk them here */
+		if (!strcmp(action, "drop"))
+		{
+			Node   *parsetree = pstmt->utilityStmt;
+			ListCell *lc;
+			char   *name = NULL;
+
+			foreach(lc, ((DropStmt *)parsetree)->objects)
+			{
+				List *objname = lfirst(lc);
+#if PG_MAJOR_VERSION < 1000
+				name = strVal(linitial(objname));
+#elif PG_MAJOR_VERSION < 1500
+				name = strVal((Value *) objname);
+#else
+				name = strVal(castNode(String, objname));
+#endif
+				call_extension_scripts(name, schema, action,
+									   "before", old_version, new_version);
+			}
+		}
+		else
+			call_extension_scripts(name, schema, action,
+								   "before", old_version, new_version);
+	}
 
 	call_RawProcessUtility(PROCESS_UTILITY_ARGS);
 
 	if (action)
-		call_extension_scripts(name, schema, action,
-							   "after", old_version, new_version);
+	{
+		if (!strcmp(action, "drop"))
+		{
+			Node   *parsetree = pstmt->utilityStmt;
+			ListCell *lc;
+			char   *name = NULL;
+
+			foreach(lc, ((DropStmt *)parsetree)->objects)
+			{
+				List *objname = lfirst(lc);
+#if PG_MAJOR_VERSION < 1000
+				name = strVal(linitial(objname));
+#elif PG_MAJOR_VERSION < 1500
+				name = strVal((Value *) objname);
+#else
+				name = strVal(castNode(String, objname));
+#endif
+				call_extension_scripts(name, schema, action,
+									   "after", old_version, new_version);
+			}
+		}
+		else
+			call_extension_scripts(name, schema, action,
+								   "after", old_version, new_version);
+	}
 
 	SetUserIdAndSecContext(save_userid, save_sec_context);
 }

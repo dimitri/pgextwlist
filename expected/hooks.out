@@ -1,0 +1,25 @@
+set client_min_messages = debug;
+set extwlist.custom_path = '/dummy';
+set role mere_mortal;
+-- in the hope refint stays at version 1.0 in PostgreSQL
+create extension refint;
+DEBUG:  Considering custom script "/dummy/refint/before--1.0.sql"
+DEBUG:  Considering custom script "/dummy/refint/before-create.sql"
+DEBUG:  Considering custom script "/dummy/refint/after--1.0.sql"
+DEBUG:  Considering custom script "/dummy/refint/after-create.sql"
+alter extension refint update;
+DEBUG:  Considering custom script "/dummy/refint/before--1.0--1.0.sql"
+DEBUG:  Considering custom script "/dummy/refint/before-update.sql"
+NOTICE:  version "1.0" of extension "refint" is already installed
+DEBUG:  Considering custom script "/dummy/refint/after--1.0--1.0.sql"
+DEBUG:  Considering custom script "/dummy/refint/after-update.sql"
+comment on extension refint is 'snarky remark';
+DEBUG:  Considering custom script "/dummy/refint/before-comment.sql"
+DEBUG:  Considering custom script "/dummy/refint/after-comment.sql"
+drop extension refint, refint;
+DEBUG:  Considering custom script "/dummy/refint/before-drop.sql"
+DEBUG:  Considering custom script "/dummy/refint/before-drop.sql"
+DEBUG:  drop auto-cascades to function check_primary_key()
+DEBUG:  drop auto-cascades to function check_foreign_key()
+DEBUG:  Considering custom script "/dummy/refint/after-drop.sql"
+DEBUG:  Considering custom script "/dummy/refint/after-drop.sql"

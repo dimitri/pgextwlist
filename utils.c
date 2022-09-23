@@ -128,11 +128,9 @@ parse_default_version_in_control_file(const char *extname,
 /*
  * We lookup scripts at the following places and run them when they exist:
  *
- *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql
- *  ${extwlist_custom_path}/${extname}/${when}-${action}.sql
- *
- * - action is expected to be either "create" or "update"
- * - when   is expected to be either "before" or "after"
+ *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql (upgrade)
+ *  ${extwlist_custom_path}/${extname}/${when}-${action}.sql (create)
+ *  ${extwlist_custom_path}/${extname}/${when}-${action}--${version}.sql (rest)
  */
 char *
 get_generic_custom_script_filename(const char *name,
