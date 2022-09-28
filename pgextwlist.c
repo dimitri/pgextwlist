@@ -251,7 +251,7 @@ extension_is_whitelisted(const char *name)
 	{
 		char *curext = (char *) lfirst(lc);
 
-		if (!strcmp(name, curext))
+		if (strcmp(name, curext) == 0)
 		{
 			whitelisted = true;
 			break;
@@ -427,7 +427,7 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 	if (action)
 	{
 		/* "drop extension" can list several extensions, walk them here */
-		if (!strcmp(action, "drop"))
+		if (strcmp(action, "drop") == 0)
 		{
 			Node   *parsetree = pstmt->utilityStmt;
 			ListCell *lc;
@@ -456,7 +456,7 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 
 	if (action)
 	{
-		if (!strcmp(action, "drop"))
+		if (strcmp(action, "drop") == 0)
 		{
 			Node   *parsetree = pstmt->utilityStmt;
 			ListCell *lc;
