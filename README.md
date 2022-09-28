@@ -51,14 +51,14 @@ that performs the extension installing, and the error behavior.
   Add `pgextwlist` to the `local_preload_libraries` setting. Don't forget to
   add the module in the `$plugin` directory.
 
-* `custom_variable_classes`
-
-  Add `extwlist` to the `custom_variable_classes` setting if you're using
-  9.1, in 9.2 this setting disappeared.
-
 * `extwlist.extensions`
 
   List of extensions allowed for installation.
+
+  To allow only certain users to use the whitelist, use `ALTER ROLE` instead of
+  setting this parameter globally:
+
+  `ALTER ROLE adminuser SET extwlist.extensions = 'pg_stat_statements, postgis';`
 
 * `extwlist.custom_path`
 
@@ -72,7 +72,7 @@ That's quite simple:
 
     dim=# show extwlist.extensions;
     show extwlist.extensions;
-     extwlist.extensions 
+     extwlist.extensions
     ---------------------
      hstore,cube
     (1 row)
@@ -92,7 +92,7 @@ That's quite simple:
     dim=# \dx
     \dx
                                List of installed extensions
-      Name   | Version |   Schema   |                   Description                    
+      Name   | Version |   Schema   |                   Description
     ---------+---------+------------+--------------------------------------------------
      hstore  | 1.0     | public     | data type for storing sets of (key, value) pairs
      plpgsql | 1.0     | pg_catalog | PL/pgSQL procedural language
@@ -102,7 +102,7 @@ Even if you're not superuser:
 
     dim=> select rolsuper from pg_roles where rolname = current_user;
     select rolsuper from pg_roles where rolname = current_user;
-     rolsuper 
+     rolsuper
     ----------
      f
     (1 row)
@@ -122,7 +122,7 @@ Even if you're not superuser:
     dim=> \dx
     \dx
                                List of installed extensions
-      Name   | Version |   Schema   |                   Description                    
+      Name   | Version |   Schema   |                   Description
     ---------+---------+------------+--------------------------------------------------
      hstore  | 1.0     | public     | data type for storing sets of (key, value) pairs
      plpgsql | 1.0     | pg_catalog | PL/pgSQL procedural language
