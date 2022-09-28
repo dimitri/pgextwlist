@@ -1,15 +1,20 @@
-SET ROLE mere_mortal;
-SHOW extwlist.extensions;
-                  extwlist.extensions                   
---------------------------------------------------------
- citext,earthdistance,pg_trgm,pg_stat_statements,refint
+SELECT case
+  when setting::int >= 130000 then 'PG 13+'
+  when setting::int >= 100000 then 'PG 10..12'
+  end as "regression output for PG version"
+FROM pg_settings where name = 'server_version_num';
+ regression output for PG version 
+----------------------------------
+ PG 13+
 (1 row)
 
+SET ROLE mere_mortal;
 SELECT extname FROM pg_extension ORDER BY 1;
  extname 
 ---------
+ citext
  plpgsql
-(1 row)
+(2 rows)
 
 -- pre-existing extension
 CREATE EXTENSION plpgsql;
@@ -19,8 +24,9 @@ ERROR:  extension "hstore" does not exist
 SELECT extname FROM pg_extension ORDER BY 1;
  extname 
 ---------
+ citext
  plpgsql
-(1 row)
+(2 rows)
 
 -- non-whitelisted extension
 CREATE EXTENSION hstore;
@@ -31,41 +37,14 @@ ERROR:  extension "hstore" does not exist
 SELECT extname FROM pg_extension ORDER BY 1;
  extname 
 ---------
- plpgsql
-(1 row)
-
--- whitelisted extensions
-CREATE EXTENSION citext;
-CREATE EXTENSION pg_trgm;
-COMMENT ON EXTENSION pg_trgm IS 'pg_trgm comment';
-SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
  citext
- pg_trgm
  plpgsql
-(3 rows)
-
-SELECT d.description FROM pg_extension e JOIN pg_description d ON d.objoid = e.oid WHERE e.extname = 'pg_trgm';
-   description   
------------------
- pg_trgm comment
-(1 row)
+(2 rows)
 
 -- whitelisted extension, but dependency is missing
 CREATE EXTENSION earthdistance;
 ERROR:  required extension "cube" is not installed
 HINT:  Use CREATE EXTENSION ... CASCADE to install required extensions too.
-SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
- citext
- pg_trgm
- plpgsql
-(3 rows)
-
--- drop whitelisted extension
-DROP EXTENSION pg_trgm;
 SELECT extname FROM pg_extension ORDER BY 1;
  extname 
 ---------
@@ -82,20 +61,4 @@ SELECT extname FROM pg_extension ORDER BY 1;
  citext
  plpgsql
 (2 rows)
-
--- whitelisted extension with custom after-create script
-CREATE EXTENSION pg_stat_statements;
-SELECT extname FROM pg_extension ORDER BY 1;
-      extname       
---------------------
- citext
- pg_stat_statements
- plpgsql
-(3 rows)
-
-SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
-           proacl            
------------------------------
- {mere_mortal=X/mere_mortal}
-(1 row)
 

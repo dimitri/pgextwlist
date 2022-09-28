@@ -1,0 +1,64 @@
+SELECT case
+  when setting::int >= 130000 then 'PG 13+'
+  when setting::int >= 100000 then 'PG 10..12'
+  end as "regression output for PG version"
+FROM pg_settings where name = 'server_version_num';
+ regression output for PG version 
+----------------------------------
+ PG 10..12
+(1 row)
+
+SET ROLE mere_mortal;
+SELECT extname FROM pg_extension ORDER BY 1;
+ extname 
+---------
+ citext
+ plpgsql
+(2 rows)
+
+-- pre-existing extension
+CREATE EXTENSION plpgsql;
+ERROR:  extension "plpgsql" already exists
+COMMENT ON EXTENSION hstore IS 'plpgsql comment';
+ERROR:  extension "hstore" does not exist
+SELECT extname FROM pg_extension ORDER BY 1;
+ extname 
+---------
+ citext
+ plpgsql
+(2 rows)
+
+-- non-whitelisted extension
+CREATE EXTENSION hstore;
+ERROR:  permission denied to create extension "hstore"
+HINT:  Must be superuser to create this extension.
+COMMENT ON EXTENSION hstore IS 'hstore comment';
+ERROR:  extension "hstore" does not exist
+SELECT extname FROM pg_extension ORDER BY 1;
+ extname 
+---------
+ citext
+ plpgsql
+(2 rows)
+
+-- whitelisted extension, but dependency is missing
+CREATE EXTENSION earthdistance;
+ERROR:  required extension "cube" is not installed
+HINT:  Use CREATE EXTENSION ... CASCADE to install required extensions too.
+SELECT extname FROM pg_extension ORDER BY 1;
+ extname 
+---------
+ citext
+ plpgsql
+(2 rows)
+
+-- drop non-whitelisted extension
+DROP EXTENSION plpgsql;
+ERROR:  must be owner of extension plpgsql
+SELECT extname FROM pg_extension ORDER BY 1;
+ extname 
+---------
+ citext
+ plpgsql
+(2 rows)
+

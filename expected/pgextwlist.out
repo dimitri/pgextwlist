@@ -11,25 +11,6 @@ SELECT extname FROM pg_extension ORDER BY 1;
  plpgsql
 (1 row)
 
--- pre-existing extension
-CREATE EXTENSION plpgsql;
-ERROR:  extension "plpgsql" already exists
-SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
- plpgsql
-(1 row)
-
--- non-whitelisted extension
-CREATE EXTENSION hstore;
-ERROR:  permission denied to create extension "hstore"
-HINT:  Must be superuser to create this extension.
-SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
- plpgsql
-(1 row)
-
 -- whitelisted extensions
 CREATE EXTENSION citext;
 CREATE EXTENSION pg_trgm;
@@ -48,17 +29,6 @@ SELECT d.description FROM pg_extension e JOIN pg_description d ON d.objoid = e.o
  pg_trgm comment
 (1 row)
 
--- whitelisted extension, but dependency is missing
-CREATE EXTENSION earthdistance;
-ERROR:  required extension "cube" is not installed
-SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
- citext
- pg_trgm
- plpgsql
-(3 rows)
-
 -- drop whitelisted extension
 DROP EXTENSION pg_trgm;
 SELECT extname FROM pg_extension ORDER BY 1;
@@ -68,17 +38,7 @@ SELECT extname FROM pg_extension ORDER BY 1;
  plpgsql
 (2 rows)
 
--- drop non-whitelisted extension
-DROP EXTENSION plpgsql;
-ERROR:  must be owner of extension plpgsql
-SELECT extname FROM pg_extension ORDER BY 1;
- extname 
----------
- citext
- plpgsql
-(2 rows)
-
--- whitelisted extension with custom after-create script
+-- whitelisted extension with custom scripts
 CREATE EXTENSION pg_stat_statements;
 SELECT extname FROM pg_extension ORDER BY 1;
       extname       
@@ -89,8 +49,20 @@ SELECT extname FROM pg_extension ORDER BY 1;
 (3 rows)
 
 SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
-           proacl            
------------------------------
- {mere_mortal=X/mere_mortal}
+                          proacl                          
+----------------------------------------------------------
+ {mere_mortal=X/mere_mortal,stat_resetters=X/mere_mortal}
 (1 row)
+
+\du stat_resetters
+               List of roles
+   Role name    |  Attributes  | Member of 
+----------------+--------------+-----------
+ stat_resetters | Cannot login | {}
+
+DROP EXTENSION pg_stat_statements;
+\du stat_resetters
+           List of roles
+ Role name | Attributes | Member of 
+-----------+------------+-----------
 
