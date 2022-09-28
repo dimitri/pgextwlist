@@ -1,3 +1,9 @@
+pgextwlist (1.15-1) unstable; urgency=medium
+
+  * New version with drop hooks.
+
+ -- Christoph Berg <myon@debian.org>  Wed, 28 Sep 2022 12:57:35 +0200
+
 pgextwlist (1.14-1) unstable; urgency=medium
 
   * Fix GUC handling in _PG_init.
