@@ -360,7 +360,8 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 				if (all_in_whitelist)
 				{
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										NULL, NULL, NULL, NULL, "drop");
+										NULL, "", /* schema must not be NULL */
+										NULL, NULL, "drop");
 					return;
 				}
 			}
@@ -382,8 +383,8 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 				if (extension_is_whitelisted(name))
 				{
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										name, schema,
-										old_version, new_version, "comment");
+										name, "", /* schema must not be NULL */
+										NULL, NULL, "comment");
 					return;
 				}
 			}
