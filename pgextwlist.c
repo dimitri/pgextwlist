@@ -275,8 +275,11 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 	Node       *parsetree = pstmt->utilityStmt;
 #endif
 
-	/* Don't try to make life hard for our friendly superusers. */
-	if (superuser())
+	/*
+	 * Don't try to make life hard for our friendly superusers. Also, if
+	 * a valid transaction is not ongoing then return early.
+	 */
+	if (!IsTransactionState() || superuser())
 	{
 		call_RawProcessUtility(PROCESS_UTILITY_ARGS);
 		return;
