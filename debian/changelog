@@ -1,3 +1,9 @@
+pgextwlist (1.16-1) unstable; urgency=medium
+
+  * New version with PG16 support.
+
+ -- Christoph Berg <myon@debian.org>  Fri, 30 Jun 2023 22:31:48 +0200
+
 pgextwlist (1.15-2) unstable; urgency=medium
 
   * Upload for PostgreSQL 15.
