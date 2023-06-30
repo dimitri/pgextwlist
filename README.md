@@ -16,8 +16,6 @@ Note that the extension script is running as if run by a stored procedure
 owned by your *bootstrap superuser* and with `SECURITY DEFINER`, meaning
 that the extension and all its objects are owned by this *superuser*.
 
-[![Build Status](https://travis-ci.org/dimitri/pgextwlist.svg?branch=master)](https://travis-ci.org/dimitri/pgextwlist)
-
 ## Licence
 
 The `pgextwlist` PostgreSQL extension is released under
