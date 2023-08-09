@@ -19,6 +19,6 @@ SELECT extname FROM pg_extension ORDER BY 1;
 CREATE EXTENSION pg_stat_statements;
 SELECT extname FROM pg_extension ORDER BY 1;
 SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
-\du stat_resetters
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters';
 DROP EXTENSION pg_stat_statements;
-\du stat_resetters
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters';

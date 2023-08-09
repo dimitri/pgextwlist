@@ -54,15 +54,15 @@ SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
  {mere_mortal=X/mere_mortal,stat_resetters=X/mere_mortal}
 (1 row)
 
-\du stat_resetters
-               List of roles
-   Role name    |  Attributes  | Member of 
-----------------+--------------+-----------
- stat_resetters | Cannot login | {}
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters';
+    groname     
+----------------
+ stat_resetters
+(1 row)
 
 DROP EXTENSION pg_stat_statements;
-\du stat_resetters
-           List of roles
- Role name | Attributes | Member of 
------------+------------+-----------
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters';
+ groname 
+---------
+(0 rows)
 
