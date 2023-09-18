@@ -1,5 +1,10 @@
 #!/usr/bin/make -f
 
+# fix could not stat file "after-create.sql" Value too large for defined data type
+DPKG_EXPORT_BUILDFLAGS = 1
+DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64
+include /usr/share/dpkg/buildflags.mk
+
 override_dh_installdocs:
 	dh_installdocs --all README.md
 	# remove docs that belong elsewhere
