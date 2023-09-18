@@ -7,7 +7,7 @@ Uploaders:
 Build-Depends:
  debhelper-compat (= 13),
  postgresql-all (>= 219~),
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
@@ -18,7 +18,7 @@ Package: postgresql-PGVERSION-pgextwlist
 Section: libs
 Architecture: any
 Depends:
- postgresql-PGVERSION,
+ ${postgresql:Depends},
  ${misc:Depends},
  ${shlibs:Depends},
 Description: PostgreSQL Extension Whitelisting
