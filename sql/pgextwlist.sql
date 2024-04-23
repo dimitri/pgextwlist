@@ -22,3 +22,13 @@ SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
 SELECT groname FROM pg_group WHERE groname = 'stat_resetters';
 DROP EXTENSION pg_stat_statements;
 SELECT groname FROM pg_group WHERE groname = 'stat_resetters';
+
+-- whitelisted extension with extension name extracted from the custom script filename
+SELECT set_extwlist_extname_from_filename();
+
+CREATE EXTENSION pg_stat_statements;
+SELECT extname FROM pg_extension ORDER BY 1;
+SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters2';
+DROP EXTENSION pg_stat_statements;
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters2';

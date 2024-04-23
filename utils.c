@@ -131,6 +131,11 @@ parse_default_version_in_control_file(const char *extname,
  *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql (upgrade)
  *  ${extwlist_custom_path}/${extname}/${when}-${action}.sql (create)
  *  ${extwlist_custom_path}/${extname}/${when}-${action}--${version}.sql (rest)
+ *
+ *  if extwlist.extname_from_file is set, the following format is used instead:
+ *  ${extwlist_custom_path}/${extname}--${when}--${version}.sql (upgrade)
+ *  ${extwlist_custom_path}/${extname}--${when}-${action}.sql (create)
+ *  ${extwlist_custom_path}/${extname}--${when}-${action}--${version}.sql (rest)
  */
 char *
 get_generic_custom_script_filename(const char *name,
@@ -143,8 +148,13 @@ get_generic_custom_script_filename(const char *name,
 		return NULL;
 
 	result = (char *) palloc(MAXPGPATH);
-	snprintf(result, MAXPGPATH, "%s/%s/%s-%s.sql",
-			 extwlist_custom_path, name, when, action);
+    if (extwlist_extname_from_filename) {
+        snprintf(result, MAXPGPATH, "%s/%s--%s-%s.sql",
+                 extwlist_custom_path, name, when, action);
+    } else{
+        snprintf(result, MAXPGPATH, "%s/%s/%s-%s.sql",
+                 extwlist_custom_path, name, when, action);
+    }
 
 	return result;
 }
@@ -161,12 +171,24 @@ get_specific_custom_script_filename(const char *name,
 		return NULL;
 
 	result = (char *) palloc(MAXPGPATH);
-	if (from_version)
-		snprintf(result, MAXPGPATH, "%s/%s/%s--%s--%s.sql",
-				 extwlist_custom_path, name, when, from_version, version);
-	else
-		snprintf(result, MAXPGPATH, "%s/%s/%s--%s.sql",
-				 extwlist_custom_path, name, when, version);
+	if (from_version) {
+        if (extwlist_extname_from_filename) {
+            snprintf(result, MAXPGPATH, "%s/%s--%s--%s--%s.sql",
+                     extwlist_custom_path, name, when, from_version, version);
+        } else {
+            snprintf(result, MAXPGPATH, "%s/%s/%s--%s--%s.sql",
+                     extwlist_custom_path, name, when, from_version, version);
+        }
+    }
+	else {
+        if (extwlist_extname_from_filename) {
+            snprintf(result, MAXPGPATH, "%s/%s--%s--%s.sql",
+                     extwlist_custom_path, name, when, version);
+        } else {
+            snprintf(result, MAXPGPATH, "%s/%s/%s--%s.sql",
+                     extwlist_custom_path, name, when, version);
+        }
+    }
 
 	return result;
 }

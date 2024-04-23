@@ -66,3 +66,37 @@ SELECT groname FROM pg_group WHERE groname = 'stat_resetters';
 ---------
 (0 rows)
 
+-- whitelisted extension with extension name extracted from the custom script filename
+SELECT set_extwlist_extname_from_filename();
+ set_extwlist_extname_from_filename 
+------------------------------------
+ 
+(1 row)
+
+CREATE EXTENSION pg_stat_statements;
+SELECT extname FROM pg_extension ORDER BY 1;
+      extname       
+--------------------
+ citext
+ pg_stat_statements
+ plpgsql
+(3 rows)
+
+SELECT proacl FROM pg_proc WHERE proname = 'pg_stat_statements_reset';
+                          proacl                           
+-----------------------------------------------------------
+ {mere_mortal=X/mere_mortal,stat_resetters2=X/mere_mortal}
+(1 row)
+
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters2';
+     groname     
+-----------------
+ stat_resetters2
+(1 row)
+
+DROP EXTENSION pg_stat_statements;
+SELECT groname FROM pg_group WHERE groname = 'stat_resetters2';
+ groname 
+---------
+(0 rows)
+

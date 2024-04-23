@@ -10,3 +10,6 @@ SELECT pg_reload_conf();
 (1 row)
 
 CREATE ROLE mere_mortal;
+CREATE OR REPLACE FUNCTION set_extwlist_extname_from_filename() RETURNS VOID SECURITY DEFINER AS $$
+    SET extwlist.extname_from_filename TO true;
+$$ LANGUAGE SQL;

@@ -63,6 +63,7 @@ PG_MODULE_MAGIC;
 
 char *extwlist_extensions = NULL;
 char *extwlist_custom_path = NULL;
+bool extwlist_extname_from_filename = false;
 
 static ProcessUtility_hook_type prev_ProcessUtility = NULL;
 
@@ -173,7 +174,18 @@ _PG_init(void)
 							   NULL,
 							   NULL);
 
-	EmitWarningsOnPlaceholders("extwlist");
+    DefineCustomBoolVariable("extwlist.extname_from_filename",
+                               "Flag allowing a lookup of extension name in custom script filename",
+                               "",
+                               &extwlist_extname_from_filename,
+                               false,
+                             PGC_SUSET,
+                               GUC_NOT_IN_SAMPLE,
+                               NULL,
+                               NULL,
+                               NULL);
+
+    EmitWarningsOnPlaceholders("extwlist");
 
 	prev_ProcessUtility = ProcessUtility_hook;
 	ProcessUtility_hook = extwlist_ProcessUtility;
@@ -192,6 +204,13 @@ _PG_init(void)
  *
  * - action is expected to be one of "create", "update", "comment", or "drop"
  * - when   is expected to be either "before" or "after"
+ *
+ * if extwlist.extname_from_filename is set, then custom scripts must have the following format:
+ *
+ *  ${extwlist_custom_path}/${extname}--${when}--${version}.sql (create)
+ *  ${extwlist_custom_path}/${extname}--${when}--${oldversion}--${newversion}.sql (upgrade)
+ *  ${extwlist_custom_path}/${extname}--${when}-${action}--${version}.sql (rest)
+ *  ${extwlist_custom_path}/${extname}--${when}-${action}.sql (all actions)
  *
  * We don't validation the extension's name before building the scripts path
  * here because the extension name we are dealing with must have already been
