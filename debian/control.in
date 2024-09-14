@@ -5,9 +5,11 @@ Uploaders:
  Dimitri Fontaine <dim@tapoueh.org>,
  Christoph Berg <myon@debian.org>,
 Build-Depends:
+ architecture-is-64-bit <!pkg.postgresql.32-bit>,
  debhelper-compat (= 13),
- postgresql-all (>= 219~),
-Standards-Version: 4.6.2
+ postgresql-all <!nocheck>,
+ postgresql-server-dev-all,
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
 Section: database
 Homepage: https://github.com/dimitri/pgextwlist
@@ -18,8 +20,8 @@ Package: postgresql-PGVERSION-pgextwlist
 Section: libs
 Architecture: any
 Depends:
- ${postgresql:Depends},
  ${misc:Depends},
+ ${postgresql:Depends},
  ${shlibs:Depends},
 Description: PostgreSQL Extension Whitelisting
  This extension implements extension whitelisting, and will actively prevent

@@ -1,5 +1,5 @@
 Depends:
- postgresql-contrib-16,
+ postgresql-contrib-17,
  make,
  @,
 Tests: installcheck
