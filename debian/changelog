@@ -1,3 +1,9 @@
+pgextwlist (1.18-1) unstable; urgency=medium
+
+  * Support PostgreSQL 18.
+
+ -- Christoph Berg <myon@debian.org>  Wed, 23 Apr 2025 15:12:22 +0200
+
 pgextwlist (1.17-3) unstable; urgency=medium
 
   * Upload for PostgreSQL 17.
