@@ -126,6 +126,16 @@ parse_default_version_in_control_file(const char *extname,
 }
 
 /*
+ * Returns true when extwlist.custom_path is set to a usable value, false
+ * when it's NULL or empty (feature disabled).
+ */
+static bool
+custom_path_is_set(void)
+{
+	return extwlist_custom_path != NULL && extwlist_custom_path[0] != '\0';
+}
+
+/*
  * We lookup scripts at the following places and run them when they exist:
  *
  *  ${extwlist_custom_path}/${extname}/${when}--${version}.sql (upgrade)
@@ -139,7 +149,7 @@ get_generic_custom_script_filename(const char *name,
 {
 	char	   *result;
 
-	if (extwlist_custom_path == NULL)
+	if (!custom_path_is_set())
 		return NULL;
 
 	result = (char *) palloc(MAXPGPATH);
@@ -157,7 +167,7 @@ get_specific_custom_script_filename(const char *name,
 {
 	char	   *result;
 
-	if (extwlist_custom_path == NULL)
+	if (!custom_path_is_set())
 		return NULL;
 
 	result = (char *) palloc(MAXPGPATH);
@@ -169,6 +179,65 @@ get_specific_custom_script_filename(const char *name,
 				 extwlist_custom_path, name, when, version);
 
 	return result;
+}
+
+/*
+ * Build ${extwlist.custom_path}/${extname} into a palloc'd buffer. Returns
+ * NULL if custom_path is unset; the caller is responsible for pfree.
+ */
+char *
+get_custom_script_dir(const char *extname)
+{
+	char	   *result;
+
+	if (!custom_path_is_set())
+		return NULL;
+
+	result = (char *) palloc(MAXPGPATH);
+	snprintf(result, MAXPGPATH, "%s/%s", extwlist_custom_path, extname);
+
+	return result;
+}
+
+/*
+ * Ensure the per-extension subdirectory under extwlist.custom_path is
+ * reachable. ENOENT means the extension simply has no custom scripts and
+ * is treated as a silent skip; any other stat() failure is a hard error
+ * because silently dropping hooks would defeat the security purpose of
+ * the whitelist.
+ */
+void
+validate_custom_script_dir(const char *extname)
+{
+	char	   *dir;
+	struct stat st;
+
+	if (!custom_path_is_set())
+		return;
+
+	dir = get_custom_script_dir(extname);
+
+	if (stat(dir, &st) != 0)
+	{
+		if (errno == ENOENT)
+		{
+			/* subdir legitimately absent; nothing to run */
+			pfree(dir);
+			return;
+		}
+
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not access custom script directory \"%s\": %m",
+						dir)));
+	}
+
+	if (!S_ISDIR(st.st_mode))
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("custom script path \"%s\" is not a directory", dir)));
+
+	pfree(dir);
 }
 
 /*

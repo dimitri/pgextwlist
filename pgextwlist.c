@@ -9,7 +9,9 @@
  */
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 #include "postgres.h"
 
 #include "pgextwlist.h"
@@ -142,6 +144,48 @@ static void call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 static void call_RawProcessUtility(PROCESS_UTILITY_PROTO_ARGS);
 
 /*
+ * Check that the configured extwlist.custom_path exists, is a directory,
+ * and is reachable. Empty/NULL disables the feature (no validation).
+ *
+ * Failing here is intentional: a misconfigured custom_path would silently
+ * bypass intended extension hooks, which defeats the security purpose of
+ * the whitelist. Better to refuse the configuration outright.
+ */
+static void
+check_extwlist_custom_path_impl(const char *newval)
+{
+	struct stat st;
+
+	if (newval == NULL || newval[0] == '\0')
+		return;
+
+	if (stat(newval, &st) != 0)
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("invalid value for parameter \"extwlist.custom_path\": "
+						"could not access \"%s\": %m", newval)));
+
+	if (!S_ISDIR(st.st_mode))
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				 errmsg("invalid value for parameter \"extwlist.custom_path\": "
+						"\"%s\" is not a directory", newval)));
+
+	if (access(newval, R_OK | X_OK) != 0)
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("invalid value for parameter \"extwlist.custom_path\": "
+						"directory \"%s\" is not readable: %m", newval)));
+}
+
+static bool
+check_extwlist_custom_path(char **newval, void **extra, GucSource source)
+{
+	check_extwlist_custom_path_impl(*newval);
+	return true;
+}
+
+/*
  * _PG_init()			- library load-time initialization
  *
  * DO NOT make this static nor change its name!
@@ -164,12 +208,13 @@ _PG_init(void)
 
 	DefineCustomStringVariable("extwlist.custom_path",
 							   "Directory where to load custom scripts from",
-							   "",
+							   "Must point to an existing, readable directory; "
+							   "empty disables the custom-script feature.",
 							   &extwlist_custom_path,
 							   "",
 							   PGC_SUSET,
 							   GUC_NOT_IN_SAMPLE,
-							   NULL,
+							   check_extwlist_custom_path,
 							   NULL,
 							   NULL);
 
@@ -207,6 +252,18 @@ call_extension_scripts(const char *extname,
 {
 	char *specific_custom_script;
 	char *generic_custom_script;
+
+	/* Nothing to do if the custom-script feature is disabled. */
+	if (extwlist_custom_path == NULL || extwlist_custom_path[0] == '\0')
+		return;
+
+	/*
+	 * Ensure the per-extension subdirectory exists and is reachable.
+	 * ENOENT is treated as "no custom scripts for this extension" and
+	 * silently skipped; anything else is a hard error to avoid bypassing
+	 * the whitelist via filesystem misconfiguration.
+	 */
+	validate_custom_script_dir(extname);
 
 	if (version)
 	{

@@ -28,6 +28,10 @@ char *get_generic_custom_script_filename(const char *name,
 										 const char *action,
 										 const char *when);
 
+char *get_custom_script_dir(const char *extname);
+
+void validate_custom_script_dir(const char *extname);
+
 char *get_extension_current_version(const char *extname);
 
 void fill_in_extension_properties(const char *extname,

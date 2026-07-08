@@ -1,0 +1,47 @@
+-- extwlist.custom_path validation
+--
+-- The configured path must exist and be a readable directory; an
+-- unreadable or missing top-level path is a hard ERROR to avoid silently
+-- bypassing the extension whitelist via filesystem misconfiguration.
+
+\set goodpath `pwd` '/test-scripts'
+\set regfile `pwd` '/README.md'
+
+-- 1. Nonexistent path is rejected at SET time.
+SET extwlist.custom_path = '/no/such/directory/pgextwlist-test';
+-- Value should be unchanged after rejection (still the cluster default).
+SELECT substring(setting FROM '/([^/]*)$') AS suffix
+FROM pg_settings WHERE name = 'extwlist.custom_path';
+
+-- 2. A regular file is rejected (not a directory).
+SET extwlist.custom_path = :'regfile';
+SELECT substring(setting FROM '/([^/]*)$') AS suffix
+FROM pg_settings WHERE name = 'extwlist.custom_path';
+
+-- 3. Empty string disables the feature (no validation, no script lookup).
+SET extwlist.custom_path = '';
+SELECT setting AS suffix
+FROM pg_settings WHERE name = 'extwlist.custom_path';
+
+-- With feature off, CREATE EXTENSION on a whitelisted extension succeeds
+-- even though no custom_path is configured.
+SET ROLE mere_mortal;
+CREATE EXTENSION citext;
+DROP EXTENSION citext;
+RESET ROLE;
+
+-- 4. Setting back to a valid directory is accepted.
+SET extwlist.custom_path = :'goodpath';
+SELECT substring(setting FROM '/([^/]*)$') AS suffix
+FROM pg_settings WHERE name = 'extwlist.custom_path';
+
+-- Per-extension subdirectory absent is a silent skip: CREATE EXTENSION
+-- on a whitelisted extension whose subdir does not exist under the
+-- custom_path must succeed without error.
+SET ROLE mere_mortal;
+CREATE EXTENSION refint;
+DROP EXTENSION refint;
+RESET ROLE;
+
+-- 5. Restore default so downstream tests start from a known state.
+RESET extwlist.custom_path;

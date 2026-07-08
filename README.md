@@ -62,7 +62,11 @@ that performs the extension installing, and the error behavior.
 
 * `extwlist.custom_path`
 
-  Filesystem path where to look for *custom scripts*.
+  Filesystem path where to look for *custom scripts*. Must point to an
+  existing, readable directory; misconfiguration raises an `ERROR` at
+  assignment time (or at `CREATE` / `UPDATE EXTENSION` time for the
+  per-extension subdirectory) — scripts are never silently skipped. An
+  empty string disables the feature.
 
 ## Usage
 
