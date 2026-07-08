@@ -1,0 +1,86 @@
+-- extwlist.restrict_to_database_owner
+--
+-- When this GUC is on, pgextwlist only invokes its superuser-override path
+-- (CREATE / ALTER UPDATE / DROP / COMMENT EXTENSION on whitelisted
+-- extensions) when the current user is the database owner. Non-owners
+-- receive an explicit error. Trusted extensions and non-whitelisted
+-- extensions fall through to PG's normal checks.
+-- The pg_regress connection user owns contrib_regression in installcheck
+-- mode, so that user IS the database owner for these tests.
+-- Reset cluster-wide state that might be left over from prior runs.
+DROP EXTENSION IF EXISTS pg_stat_statements;
+NOTICE:  extension "pg_stat_statements" does not exist, skipping
+DROP ROLE IF EXISTS stat_resetters;
+NOTICE:  role "stat_resetters" does not exist, skipping
+DROP EXTENSION IF EXISTS btree_gin;
+NOTICE:  extension "btree_gin" does not exist, skipping
+-- =====================================================================
+-- 1. Default (GUC off) preserves current behavior.
+-- =====================================================================
+SET ROLE mere_mortal;
+CREATE EXTENSION pg_stat_statements;
+RESET ROLE;
+DROP EXTENSION pg_stat_statements;
+DROP ROLE stat_resetters;
+-- =====================================================================
+-- 2. GUC on, non-DB-owner (mere_mortal): CREATE on whitelisted ext is
+--    blocked by pgextwlist with an explicit error.
+-- =====================================================================
+SET extwlist.restrict_to_database_owner = on;
+SET ROLE mere_mortal;
+CREATE EXTENSION pg_stat_statements;
+ERROR:  extension "pg_stat_statements" installation via pgextwlist is restricted to the database owner
+RESET ROLE;
+-- =====================================================================
+-- 3. GUC on, DB owner (the pg_regress connection user, no SET ROLE):
+--    CREATE on whitelisted ext still works.
+-- =====================================================================
+SET extwlist.restrict_to_database_owner = on;
+CREATE EXTENSION pg_stat_statements;
+DROP EXTENSION pg_stat_statements;
+-- (stat_resetters was already removed in test 1; the after-drop script
+-- recreated and re-dropped it implicitly.)
+-- =====================================================================
+-- 4. GUC on, non-DB-owner, superuser-only extension: PG's superuser
+--    check fires; pgextwlist's GUC does not interfere.
+-- =====================================================================
+SET extwlist.restrict_to_database_owner = on;
+SET ROLE mere_mortal;
+CREATE EXTENSION file_fdw;
+ERROR:  permission denied to create extension "file_fdw"
+HINT:  Must be superuser to create this extension.
+RESET ROLE;
+-- =====================================================================
+-- 5. GUC on, non-DB-owner, trusted extension (btree_gin):
+--    PG's trusted-extension mechanism lets mere_mortal install it,
+--    provided mere_mortal has CREATE on the database. Grant + install +
+--    revoke + cleanup.
+-- =====================================================================
+SET extwlist.restrict_to_database_owner = on;
+GRANT CREATE ON DATABASE contrib_regression TO mere_mortal;
+SET ROLE mere_mortal;
+CREATE EXTENSION btree_gin;
+RESET ROLE;
+DROP EXTENSION btree_gin;
+REVOKE CREATE ON DATABASE contrib_regression FROM mere_mortal;
+-- =====================================================================
+-- 6. GUC on also blocks UPDATE / DROP / COMMENT for non-DB-owner.
+--    Install as DB owner first, then exercise the four operations as
+--    mere_mortal with GUC on.
+-- =====================================================================
+SET extwlist.restrict_to_database_owner = off;
+CREATE EXTENSION pg_stat_statements;
+SET extwlist.restrict_to_database_owner = on;
+SET ROLE mere_mortal;
+ALTER EXTENSION pg_stat_statements UPDATE;
+ERROR:  extension "pg_stat_statements" update via pgextwlist is restricted to the database owner
+DROP EXTENSION pg_stat_statements;
+ERROR:  extension drop via pgextwlist is restricted to the database owner
+COMMENT ON EXTENSION pg_stat_statements IS 'probe';
+ERROR:  comment on extension "pg_stat_statements" via pgextwlist is restricted to the database owner
+RESET ROLE;
+-- Final cleanup.
+DROP EXTENSION IF EXISTS pg_stat_statements;
+DROP ROLE IF EXISTS stat_resetters;
+NOTICE:  role "stat_resetters" does not exist, skipping
+RESET extwlist.restrict_to_database_owner;

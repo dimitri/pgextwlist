@@ -19,6 +19,7 @@
 
 extern char *extwlist_extensions;
 extern char *extwlist_custom_path;
+extern bool	extwlist_restrict_to_database_owner;
 
 char	   *get_specific_custom_script_filename(const char *name,
 												const char *when,

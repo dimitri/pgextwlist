@@ -68,6 +68,16 @@ that performs the extension installing, and the error behavior.
   per-extension subdirectory) — scripts are never silently skipped. An
   empty string disables the feature.
 
+* `extwlist.restrict_to_database_owner`
+
+  When `on`, pgextwlist only invokes its superuser-override path
+  (`CREATE`, `ALTER … UPDATE`, `DROP`, `COMMENT ON EXTENSION` on
+  whitelisted extensions) when the current user owns the current
+  database. Non-owners receive `ERROR: extension "…" … via pgextwlist
+  is restricted to the database owner`. Trusted extensions and any
+  non-whitelisted extension fall through to PostgreSQL's own checks
+  unchanged. Off by default.
+
 ## Usage
 
 That's quite simple:

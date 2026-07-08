@@ -60,6 +60,7 @@ PG_MODULE_MAGIC;
 
 char	   *extwlist_extensions = NULL;
 char	   *extwlist_custom_path = NULL;
+bool		extwlist_restrict_to_database_owner = false;
 
 static ProcessUtility_hook_type prev_ProcessUtility = NULL;
 
@@ -196,6 +197,19 @@ _PG_init(void)
 							   NULL,
 							   NULL);
 
+	DefineCustomBoolVariable("extwlist.restrict_to_database_owner",
+							 "Restrict pgextwlist superuser override to the database owner",
+							 "When on, only the database owner may use pgextwlist "
+							 "to install, update, drop, or comment on whitelisted "
+							 "extensions. Trusted extensions are unaffected.",
+							 &extwlist_restrict_to_database_owner,
+							 false,
+							 PGC_SUSET,
+							 GUC_NOT_IN_SAMPLE,
+							 NULL,
+							 NULL,
+							 NULL);
+
 	EmitWarningsOnPlaceholders("extwlist");
 
 	prev_ProcessUtility = ProcessUtility_hook;
@@ -296,6 +310,22 @@ extension_is_whitelisted(const char *name)
 }
 
 /*
+ * Return true if the current user owns the current database. Used to gate
+ * pgextwlist's superuser-override path when extwlist.restrict_to_database_owner
+ * is enabled. PG 16 removed pg_database_ownercheck() in favour of the generic
+ * object_ownercheck(), so we dispatch on version.
+ */
+static bool
+current_user_is_database_owner(void)
+{
+#if PG_MAJOR_VERSION >= 1600
+	return object_ownercheck(DatabaseRelationId, MyDatabaseId, GetUserId());
+#else
+	return pg_database_ownercheck(MyDatabaseId, GetUserId());
+#endif
+}
+
+/*
  * ProcessUtility hook
  */
 static void
@@ -329,6 +359,14 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 
 				if (extension_is_whitelisted(name))
 				{
+					if (extwlist_restrict_to_database_owner &&
+						!current_user_is_database_owner())
+						ereport(ERROR,
+								(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+								 errmsg("extension \"%s\" installation via pgextwlist "
+										"is restricted to the database owner",
+										name)));
+
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
 										name, schema,
 										old_version, new_version, "create");
@@ -350,6 +388,14 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 
 				if (extension_is_whitelisted(name))
 				{
+					if (extwlist_restrict_to_database_owner &&
+						!current_user_is_database_owner())
+						ereport(ERROR,
+								(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+								 errmsg("extension \"%s\" update via pgextwlist "
+										"is restricted to the database owner",
+										name)));
+
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
 										name, schema,
 										old_version, new_version, "update");
@@ -394,6 +440,13 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 				 */
 				if (all_in_whitelist)
 				{
+					if (extwlist_restrict_to_database_owner &&
+						!current_user_is_database_owner())
+						ereport(ERROR,
+								(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+								 errmsg("extension drop via pgextwlist "
+										"is restricted to the database owner")));
+
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
 										NULL, "",	/* schema must not be NULL */
 										NULL, NULL, "drop");
@@ -416,6 +469,14 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 
 					if (extension_is_whitelisted(name))
 					{
+						if (extwlist_restrict_to_database_owner &&
+							!current_user_is_database_owner())
+							ereport(ERROR,
+									(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+									 errmsg("comment on extension \"%s\" via pgextwlist "
+											"is restricted to the database owner",
+											name)));
+
 						call_ProcessUtility(PROCESS_UTILITY_ARGS,
 											name, "",	/* schema must not be
 														 * NULL */
