@@ -641,7 +641,10 @@ execute_custom_script(const char *filename, const char *schemaName)
 								 , false
 #endif
 			);
-	if (log_min_messages < WARNING)
+	/*
+	 * log_min_messages was changed from a scalar int (PG <= 18) to something
+	 * more complex in PG 19. Set it unconditionally here for simplicity.
+	 */
 		(void) set_config_option("log_min_messages", "warning",
 								 PGC_SUSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true
