@@ -4,7 +4,7 @@
 -- unreadable or missing top-level path is a hard ERROR to avoid silently
 -- bypassing the extension whitelist via filesystem misconfiguration.
 \set goodpath `pwd` '/test-scripts'
-\set regfile `pwd` '/README.md'
+\set regfile '/etc/passwd'
 -- 1. Nonexistent path is rejected at SET time.
 SET extwlist.custom_path = '/no/such/directory/pgextwlist-test';
 ERROR:  invalid value for parameter "extwlist.custom_path": could not access "/no/such/directory/pgextwlist-test": No such file or directory
@@ -18,7 +18,7 @@ FROM pg_settings WHERE name = 'extwlist.custom_path';
 
 -- 2. A regular file is rejected (not a directory).
 SET extwlist.custom_path = :'regfile';
-ERROR:  invalid value for parameter "extwlist.custom_path": "/home/myon/postgresql/pgextwlist/pgextwlist/README.md" is not a directory
+ERROR:  invalid value for parameter "extwlist.custom_path": "/etc/passwd" is not a directory
 SELECT substring(setting FROM '/([^/]*)$') AS suffix
 FROM pg_settings WHERE name = 'extwlist.custom_path';
     suffix    

@@ -5,7 +5,7 @@
 -- bypassing the extension whitelist via filesystem misconfiguration.
 
 \set goodpath `pwd` '/test-scripts'
-\set regfile `pwd` '/README.md'
+\set regfile '/etc/passwd'
 
 -- 1. Nonexistent path is rejected at SET time.
 SET extwlist.custom_path = '/no/such/directory/pgextwlist-test';
