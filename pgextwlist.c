@@ -1,4 +1,5 @@
-/* PostgreSQL Extension WhiteList -- Dimitri Fontaine
+/*
+ * PostgreSQL Extension WhiteList -- Dimitri Fontaine
  *
  * Author: Dimitri Fontaine <dimitri@2ndQuadrant.fr>
  * Licence: PostgreSQL
@@ -57,8 +58,8 @@
  */
 PG_MODULE_MAGIC;
 
-char *extwlist_extensions = NULL;
-char *extwlist_custom_path = NULL;
+char	   *extwlist_extensions = NULL;
+char	   *extwlist_custom_path = NULL;
 
 static ProcessUtility_hook_type prev_ProcessUtility = NULL;
 
@@ -97,7 +98,7 @@ void		_PG_fini(void);
 										QueryCompletion *qc
 #define PROCESS_UTILITY_ARGS pstmt, queryString, readOnlyTree, context, \
                               params, queryEnv, dest, qc
-#endif	/* PG_MAJOR_VERSION */
+#endif							/* PG_MAJOR_VERSION */
 
 #define EREPORT_EXTENSION_IS_NOT_WHITELISTED(op)						\
         ereport(ERROR,                                                  \
@@ -227,18 +228,18 @@ call_extension_scripts(const char *extname,
 					   const char *from_version,
 					   const char *version)
 {
-	char *specific_custom_script;
-	char *generic_custom_script;
+	char	   *specific_custom_script;
+	char	   *generic_custom_script;
 
 	/* Nothing to do if the custom-script feature is disabled. */
 	if (extwlist_custom_path == NULL || extwlist_custom_path[0] == '\0')
 		return;
 
 	/*
-	 * Ensure the per-extension subdirectory exists and is reachable.
-	 * ENOENT is treated as "no custom scripts for this extension" and
-	 * silently skipped; anything else is a hard error to avoid bypassing
-	 * the whitelist via filesystem misconfiguration.
+	 * Ensure the per-extension subdirectory exists and is reachable. ENOENT
+	 * is treated as "no custom scripts for this extension" and silently
+	 * skipped; anything else is a hard error to avoid bypassing the whitelist
+	 * via filesystem misconfiguration.
 	 */
 	validate_custom_script_dir(extname);
 
@@ -253,7 +254,7 @@ call_extension_scripts(const char *extname,
 		if (access(specific_custom_script, F_OK) == 0)
 		{
 			execute_custom_script(specific_custom_script, schema);
-			return; /* skip generic script */
+			return;				/* skip generic script */
 		}
 	}
 
@@ -269,9 +270,9 @@ call_extension_scripts(const char *extname,
 static bool
 extension_is_whitelisted(const char *name)
 {
-	bool        whitelisted = false;
-	char       *rawnames = pstrdup(extwlist_extensions);
-	List       *extensions;
+	bool		whitelisted = false;
+	char	   *rawnames = pstrdup(extwlist_extensions);
+	List	   *extensions;
 	ListCell   *lc;
 
 	if (!SplitIdentifierString(rawnames, ',', &extensions))
@@ -283,7 +284,7 @@ extension_is_whitelisted(const char *name)
 	}
 	foreach(lc, extensions)
 	{
-		char *curext = (char *) lfirst(lc);
+		char	   *curext = (char *) lfirst(lc);
 
 		if (strcmp(name, curext) == 0)
 		{
@@ -300,15 +301,15 @@ extension_is_whitelisted(const char *name)
 static void
 extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 {
-	char	*name = NULL;
-	char    *schema = NULL;
-	char    *old_version = NULL;
-	char    *new_version = NULL;
-	Node       *parsetree = pstmt->utilityStmt;
+	char	   *name = NULL;
+	char	   *schema = NULL;
+	char	   *old_version = NULL;
+	char	   *new_version = NULL;
+	Node	   *parsetree = pstmt->utilityStmt;
 
 	/*
-	 * Don't try to make life hard for our friendly superusers. Also, if
-	 * a valid transaction is not ongoing then return early.
+	 * Don't try to make life hard for our friendly superusers. Also, if a
+	 * valid transaction is not ongoing then return early.
 	 */
 	if (!IsTransactionState() || superuser())
 	{
@@ -319,58 +320,60 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 	switch (nodeTag(parsetree))
 	{
 		case T_CreateExtensionStmt:
-		{
-			CreateExtensionStmt *stmt = (CreateExtensionStmt *)parsetree;
-			name = stmt->extname;
-			fill_in_extension_properties(name, stmt->options,
-										 &schema, &old_version, &new_version);
-
-			if (extension_is_whitelisted(name))
 			{
-				call_ProcessUtility(PROCESS_UTILITY_ARGS,
-									name, schema,
-									old_version, new_version, "create");
-				return;
+				CreateExtensionStmt *stmt = (CreateExtensionStmt *) parsetree;
+
+				name = stmt->extname;
+				fill_in_extension_properties(name, stmt->options,
+											 &schema, &old_version, &new_version);
+
+				if (extension_is_whitelisted(name))
+				{
+					call_ProcessUtility(PROCESS_UTILITY_ARGS,
+										name, schema,
+										old_version, new_version, "create");
+					return;
+				}
+				break;
 			}
-			break;
-		}
 
 		case T_AlterExtensionStmt:
-		{
-			AlterExtensionStmt *stmt = (AlterExtensionStmt *)parsetree;
-			name = stmt->extname;
-			fill_in_extension_properties(name, stmt->options,
-										 &schema, &old_version, &new_version);
-
-			/* fetch old_version from the catalogs, actually */
-			old_version = get_extension_current_version(name);
-
-			if (extension_is_whitelisted(name))
 			{
-				call_ProcessUtility(PROCESS_UTILITY_ARGS,
-									name, schema,
-									old_version, new_version, "update");
-				return;
+				AlterExtensionStmt *stmt = (AlterExtensionStmt *) parsetree;
+
+				name = stmt->extname;
+				fill_in_extension_properties(name, stmt->options,
+											 &schema, &old_version, &new_version);
+
+				/* fetch old_version from the catalogs, actually */
+				old_version = get_extension_current_version(name);
+
+				if (extension_is_whitelisted(name))
+				{
+					call_ProcessUtility(PROCESS_UTILITY_ARGS,
+										name, schema,
+										old_version, new_version, "update");
+					return;
+				}
+				break;
 			}
-			break;
-		}
 
 		case T_DropStmt:
-			if (((DropStmt *)parsetree)->removeType == OBJECT_EXTENSION)
+			if (((DropStmt *) parsetree)->removeType == OBJECT_EXTENSION)
 			{
 				/* DROP EXTENSION can target several of them at once */
-				bool all_in_whitelist = true;
-				ListCell *lc;
+				bool		all_in_whitelist = true;
+				ListCell   *lc;
 
-				foreach(lc, ((DropStmt *)parsetree)->objects)
+				foreach(lc, ((DropStmt *) parsetree)->objects)
 				{
 					/*
 					 * For deconstructing the object list into actual names,
 					 * see the get_object_address_unqualified() function in
 					 * src/backend/catalog/objectaddress.c
 					 */
-					bool whitelisted = false;
-					List *objname = lfirst(lc);
+					bool		whitelisted = false;
+					List	   *objname = lfirst(lc);
 #if PG_MAJOR_VERSION < 1500
 					name = strVal((Value *) objname);
 #else
@@ -392,7 +395,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 				if (all_in_whitelist)
 				{
 					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										NULL, "", /* schema must not be NULL */
+										NULL, "",	/* schema must not be NULL */
 										NULL, NULL, "drop");
 					return;
 				}
@@ -400,26 +403,28 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 			break;
 
 		case T_CommentStmt:
-		{
-			CommentStmt* stmt = (CommentStmt *)parsetree;
-			if (stmt->objtype == OBJECT_EXTENSION)
 			{
+				CommentStmt *stmt = (CommentStmt *) parsetree;
+
+				if (stmt->objtype == OBJECT_EXTENSION)
+				{
 #if PG_MAJOR_VERSION < 1500
-				name = strVal((Value *) stmt->object);
+					name = strVal((Value *) stmt->object);
 #else
-				name = strVal(castNode(String, stmt->object));
+					name = strVal(castNode(String, stmt->object));
 #endif
 
-				if (extension_is_whitelisted(name))
-				{
-					call_ProcessUtility(PROCESS_UTILITY_ARGS,
-										name, "", /* schema must not be NULL */
-										NULL, NULL, "comment");
-					return;
+					if (extension_is_whitelisted(name))
+					{
+						call_ProcessUtility(PROCESS_UTILITY_ARGS,
+											name, "",	/* schema must not be
+														 * NULL */
+											NULL, NULL, "comment");
+						return;
+					}
 				}
+				break;
 			}
-			break;
-		}
 			/* We intentionally don't support that command. */
 		case T_AlterExtensionContentsStmt:
 		default:
@@ -460,13 +465,13 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 		/* "drop extension" can list several extensions, walk them here */
 		if (strcmp(action, "drop") == 0)
 		{
-			Node   *parsetree = pstmt->utilityStmt;
-			ListCell *lc;
-			char   *name = NULL;
+			Node	   *parsetree = pstmt->utilityStmt;
+			ListCell   *lc;
+			char	   *name = NULL;
 
-			foreach(lc, ((DropStmt *)parsetree)->objects)
+			foreach(lc, ((DropStmt *) parsetree)->objects)
 			{
-				List *objname = lfirst(lc);
+				List	   *objname = lfirst(lc);
 #if PG_MAJOR_VERSION < 1500
 				name = strVal((Value *) objname);
 #else
@@ -487,13 +492,13 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 	{
 		if (strcmp(action, "drop") == 0)
 		{
-			Node   *parsetree = pstmt->utilityStmt;
-			ListCell *lc;
-			char   *name = NULL;
+			Node	   *parsetree = pstmt->utilityStmt;
+			ListCell   *lc;
+			char	   *name = NULL;
 
-			foreach(lc, ((DropStmt *)parsetree)->objects)
+			foreach(lc, ((DropStmt *) parsetree)->objects)
 			{
-				List *objname = lfirst(lc);
+				List	   *objname = lfirst(lc);
 #if PG_MAJOR_VERSION < 1500
 				name = strVal((Value *) objname);
 #else

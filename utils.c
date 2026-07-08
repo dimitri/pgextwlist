@@ -1,4 +1,5 @@
-/* PostgreSQL Extension WhiteList -- Dimitri Fontaine
+/*
+ * PostgreSQL Extension WhiteList -- Dimitri Fontaine
  *
  * Author: Dimitri Fontaine <dimitri@2ndQuadrant.fr>
  * Licence: PostgreSQL
@@ -72,8 +73,8 @@ parse_default_version_in_control_file(const char *extname,
 	char	   *filename;
 	FILE	   *file;
 	ConfigVariable *item,
-		*head = NULL,
-		*tail = NULL;
+			   *head = NULL,
+			   *tail = NULL;
 
 	/*
 	 * Locate the file to read.
@@ -84,7 +85,7 @@ parse_default_version_in_control_file(const char *extname,
 
 	if ((file = AllocateFile(filename, "r")) == NULL)
 	{
-        /* we still need to handle the following error here */
+		/* we still need to handle the following error here */
 		ereport(ERROR,
 				(errcode_for_file_access(),
 				 errmsg("could not open extension control file \"%s\": %m",
@@ -250,9 +251,9 @@ get_extension_current_version(const char *extname)
 	Datum		datum;
 	bool		isnull;
 
-    /*
-     * Look up the extension --- it must already exist in pg_extension
-     */
+	/*
+	 * Look up the extension --- it must already exist in pg_extension
+	 */
 	extRel = table_open(ExtensionRelationId, AccessShareLock);
 
 	ScanKeyInit(&key[0],
@@ -302,8 +303,8 @@ fill_in_extension_properties(const char *extname,
 	DefElem    *d_old_version = NULL;
 
 	/*
-	 * Read the statement option list, taking care not to issue any errors here
-	 * ourselves if at all possible: let the core code handle them.
+	 * Read the statement option list, taking care not to issue any errors
+	 * here ourselves if at all possible: let the core code handle them.
 	 */
 	foreach(lc, options)
 	{
@@ -347,16 +348,16 @@ fill_in_extension_properties(const char *extname,
 		 * Use the current default creation namespace, which is the first
 		 * explicit entry in the search_path.
 		 */
-		Oid         schemaOid;
+		Oid			schemaOid;
 		List	   *search_path = fetch_search_path(false);
 
-		if (search_path == NIL)	/* nothing valid in search_path? */
+		if (search_path == NIL) /* nothing valid in search_path? */
 			ereport(ERROR,
 					(errcode(ERRCODE_UNDEFINED_SCHEMA),
 					 errmsg("no schema has been selected to create in")));
 		schemaOid = linitial_oid(search_path);
 		*schema = get_namespace_name(schemaOid);
-		if (*schema == NULL) /* recently-deleted namespace? */
+		if (*schema == NULL)	/* recently-deleted namespace? */
 			ereport(ERROR,
 					(errcode(ERRCODE_UNDEFINED_SCHEMA),
 					 errmsg("no schema has been selected to create in")));
@@ -371,27 +372,31 @@ fill_in_extension_properties(const char *extname,
 static char *
 read_custom_script_file(const char *filename)
 {
-	int			src_encoding, dest_encoding = GetDatabaseEncoding();
+	int			src_encoding,
+				dest_encoding = GetDatabaseEncoding();
 	bytea	   *content;
 	char	   *src_str;
 	char	   *dest_str;
 	int			len;
 	FILE	   *fp;
 	struct stat fst;
-	size_t	    nbytes;
+	size_t		nbytes;
 
-	/* read_binary_file was made static in 9.5 so we'll reimplement the logic here */
+	/*
+	 * read_binary_file was made static in 9.5 so we'll reimplement the logic
+	 * here
+	 */
 	if ((fp = AllocateFile(filename, PG_BINARY_R)) == NULL)
 		ereport(ERROR,
-			(errcode_for_file_access(),
-			 errmsg("could not open file \"%s\" for reading: %m",
-					filename)));
+				(errcode_for_file_access(),
+				 errmsg("could not open file \"%s\" for reading: %m",
+						filename)));
 
 	if (fstat(fileno(fp), &fst) < 0)
 		ereport(ERROR,
-			(errcode_for_file_access(),
-			 errmsg("could not stat file \"%s\" %m",
-					filename)));
+				(errcode_for_file_access(),
+				 errmsg("could not stat file \"%s\" %m",
+						filename)));
 
 	content = (bytea *) palloc((Size) fst.st_size + VARHDRSZ);
 	nbytes = fread(VARDATA(content), 1, (size_t) fst.st_size, fp);
@@ -468,7 +473,7 @@ execute_sql_string(const char *sql, const char *filename)
 	 */
 	foreach(lc1, raw_parsetree_list)
 	{
-		RawStmt	   *parsetree = lfirst_node(RawStmt, lc1);
+		RawStmt    *parsetree = lfirst_node(RawStmt, lc1);
 		List	   *stmt_list;
 		ListCell   *lc2;
 
@@ -478,14 +483,14 @@ execute_sql_string(const char *sql, const char *filename)
 													   NULL,
 													   0,
 													   NULL
-													   );
+			);
 #else
 		stmt_list = pg_analyze_and_rewrite(parsetree,
 										   sql,
 										   NULL,
 										   0
-										   , NULL
-										   );
+										   ,NULL
+			);
 #endif
 		stmt_list = pg_plan_queries(stmt_list,
 #if PG_MAJOR_VERSION >= 1300
@@ -512,19 +517,16 @@ execute_sql_string(const char *sql, const char *filename)
 			{
 				QueryDesc  *qdesc;
 
-				qdesc = CreateQueryDesc((PlannedStmt *) stmt,
-										sql,
+				qdesc = CreateQueryDesc((PlannedStmt *) stmt, sql,
 										GetActiveSnapshot(), NULL,
-										dest, NULL,
-										NULL,
-										0);
+										dest, NULL, NULL, 0);
 
 				ExecutorStart(qdesc, 0);
 				ExecutorRun(qdesc, ForwardScanDirection, 0
 #if PG_MAJOR_VERSION < 1800
-					, true
+							,true
 #endif
-				);
+					);
 				ExecutorFinish(qdesc);
 				ExecutorEnd(qdesc);
 
@@ -532,16 +534,12 @@ execute_sql_string(const char *sql, const char *filename)
 			}
 			else
 			{
-				ProcessUtility(stmt,
-							   sql,
+				ProcessUtility(stmt, sql,
 #if PG_MAJOR_VERSION >= 1400
-							   false,		/* no need to copy */
+							   false,	/* no need to copy */
 #endif
 							   PROCESS_UTILITY_QUERY,
-							   NULL,
-							   NULL,
-							   dest,
-							   NULL);
+							   NULL, NULL, dest, NULL);
 			}
 
 			PopActiveSnapshot();
@@ -565,7 +563,7 @@ static char *
 get_current_database_owner_name(void)
 {
 	HeapTuple	dbtuple;
-	Oid         owner;
+	Oid			owner;
 
 	dbtuple = SearchSysCache1(DATABASEOID, MyDatabaseId);
 	if (HeapTupleIsValid(dbtuple))
@@ -576,8 +574,7 @@ get_current_database_owner_name(void)
 	else
 		return NULL;
 
-	return GetUserNameFromId(owner, false
-	);
+	return GetUserNameFromId(owner, false);
 }
 
 /*
@@ -606,20 +603,16 @@ execute_custom_script(const char *filename, const char *schemaName)
 	if (client_min_messages < WARNING)
 		(void) set_config_option("client_min_messages", "warning",
 								 PGC_USERSET, PGC_S_SESSION,
-								 GUC_ACTION_SAVE, true
-								 , 0
-								 , false
+								 GUC_ACTION_SAVE, true, 0, false
 			);
+
 	/*
 	 * log_min_messages was changed from a scalar int (PG <= 18) to something
 	 * more complex in PG 19. Set it unconditionally here for simplicity.
 	 */
-		(void) set_config_option("log_min_messages", "warning",
-								 PGC_SUSET, PGC_S_SESSION,
-								 GUC_ACTION_SAVE, true
-								 , 0
-								 , false
-			);
+	(void) set_config_option("log_min_messages", "warning",
+							 PGC_SUSET, PGC_S_SESSION,
+							 GUC_ACTION_SAVE, true, 0, false);
 
 	/*
 	 * Set up the search path to contain the target schema, then the schemas
@@ -636,10 +629,7 @@ execute_custom_script(const char *filename, const char *schemaName)
 
 	(void) set_config_option("search_path", pathbuf.data,
 							 PGC_USERSET, PGC_S_SESSION,
-							 GUC_ACTION_SAVE, true
-							 , 0
-								 , false
-		);
+							 GUC_ACTION_SAVE, true, 0, false);
 
 	PG_TRY();
 	{
@@ -665,32 +655,30 @@ execute_custom_script(const char *filename, const char *schemaName)
 		 * substitute the target schema name for occurrences of @extschema@.
 		 */
 		t_sql = DirectFunctionCall3Coll(replace_text,
-									C_COLLATION_OID,
-									t_sql,
-									CStringGetTextDatum("@extschema@"),
-									CStringGetTextDatum(qSchemaName));
+										C_COLLATION_OID,
+										t_sql,
+										CStringGetTextDatum("@extschema@"),
+										CStringGetTextDatum(qSchemaName));
 
 		/*
 		 * substitute the current user name for occurrences of @current_user@
 		 */
 		t_sql = DirectFunctionCall3Coll(replace_text,
-									C_COLLATION_OID,
-									t_sql,
-									CStringGetTextDatum("@current_user@"),
-									CStringGetTextDatum(
-										GetUserNameFromId(GetUserId()
-														  , false
-										)));
+										C_COLLATION_OID,
+										t_sql,
+										CStringGetTextDatum("@current_user@"),
+										CStringGetTextDatum(GetUserNameFromId(GetUserId()
+																			  ,false
+																			  )));
 
 		/*
 		 * substitute the database owner for occurrences of @database_owner@
 		 */
 		t_sql = DirectFunctionCall3Coll(replace_text,
-									C_COLLATION_OID,
-									t_sql,
-									CStringGetTextDatum("@database_owner@"),
-									CStringGetTextDatum(
-										get_current_database_owner_name()));
+										C_COLLATION_OID,
+										t_sql,
+										CStringGetTextDatum("@database_owner@"),
+										CStringGetTextDatum(get_current_database_owner_name()));
 
 		/* And now back to C string */
 		c_sql = text_to_cstring(DatumGetTextPP(t_sql));
