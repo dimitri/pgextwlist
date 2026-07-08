@@ -1,8 +1,0 @@
-Depends:
- postgresql-common-dev,
- postgresql-contrib-18,
- @,
-Tests:
- installcheck,
-Restrictions:
- allow-stderr,
