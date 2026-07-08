@@ -5,4 +5,9 @@ ALTER SYSTEM SET extwlist.extensions='citext,earthdistance,pg_trgm,pg_stat_state
 ALTER SYSTEM SET extwlist.custom_path=:'testdir';
 SELECT pg_reload_conf();
 
-CREATE ROLE mere_mortal;
+DO LANGUAGE plpgsql $$
+BEGIN
+    CREATE ROLE mere_mortal;
+EXCEPTION WHEN duplicate_object THEN
+    NULL;
+END $$;

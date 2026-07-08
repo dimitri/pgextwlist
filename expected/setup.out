@@ -9,4 +9,9 @@ SELECT pg_reload_conf();
  t
 (1 row)
 
-CREATE ROLE mere_mortal;
+DO LANGUAGE plpgsql $$
+BEGIN
+    CREATE ROLE mere_mortal;
+EXCEPTION WHEN duplicate_object THEN
+    NULL;
+END $$;
