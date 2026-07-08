@@ -32,11 +32,7 @@
 #include "commands/dbcommands.h"
 #include "commands/seclabel.h"
 #include "commands/user.h"
-#if PG_MAJOR_VERSION >= 1000
 #include "common/md5.h"
-#else
-#include "libpq/md5.h"
-#endif
 #include "funcapi.h"
 #include "miscadmin.h"
 #include "storage/lmgr.h"
@@ -51,9 +47,7 @@
 #if PG_MAJOR_VERSION < 1200
 #include "utils/tqual.h"
 #endif
-#if PG_MAJOR_VERSION >= 1000
 #include "utils/varlena.h"
-#endif
 
 /*
  * This code has only been tested with PostgreSQL 9.1.
@@ -71,24 +65,7 @@ static ProcessUtility_hook_type prev_ProcessUtility = NULL;
 void		_PG_init(void);
 void		_PG_fini(void);
 
-#if PG_MAJOR_VERSION < 903
-#define PROCESS_UTILITY_PROTO_ARGS Node *parsetree, const char *queryString,  \
-									ParamListInfo params, bool isTopLevel,    \
-									DestReceiver *dest, char *completionTag
-
-#define PROCESS_UTILITY_ARGS parsetree, queryString, params, \
-                              isTopLevel, dest, completionTag
-#elif PG_MAJOR_VERSION < 1000
-#define PROCESS_UTILITY_PROTO_ARGS Node *parsetree,                    \
-										const char *queryString,       \
-										ProcessUtilityContext context, \
-										ParamListInfo params,          \
-										DestReceiver *dest,            \
-										char *completionTag
-
-#define PROCESS_UTILITY_ARGS parsetree, queryString, context, \
-                              params, dest, completionTag
-#elif PG_MAJOR_VERSION < 1300
+#if PG_MAJOR_VERSION < 1300
 #define PROCESS_UTILITY_PROTO_ARGS PlannedStmt *pstmt,                    \
 										const char *queryString,       \
 										ProcessUtilityContext context, \
@@ -327,10 +304,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 	char    *schema = NULL;
 	char    *old_version = NULL;
 	char    *new_version = NULL;
-
-#if PG_MAJOR_VERSION >= 1000
 	Node       *parsetree = pstmt->utilityStmt;
-#endif
 
 	/*
 	 * Don't try to make life hard for our friendly superusers. Also, if
@@ -397,9 +371,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 					 */
 					bool whitelisted = false;
 					List *objname = lfirst(lc);
-#if PG_MAJOR_VERSION < 1000
-					name = strVal(linitial(objname));
-#elif PG_MAJOR_VERSION < 1500
+#if PG_MAJOR_VERSION < 1500
 					name = strVal((Value *) objname);
 #else
 					name = strVal(castNode(String, objname));
@@ -432,9 +404,7 @@ extwlist_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS)
 			CommentStmt* stmt = (CommentStmt *)parsetree;
 			if (stmt->objtype == OBJECT_EXTENSION)
 			{
-#if PG_MAJOR_VERSION < 1000
-				name = strVal(linitial(stmt->objname));
-#elif PG_MAJOR_VERSION < 1500
+#if PG_MAJOR_VERSION < 1500
 				name = strVal((Value *) stmt->object);
 #else
 				name = strVal(castNode(String, stmt->object));
@@ -497,9 +467,7 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 			foreach(lc, ((DropStmt *)parsetree)->objects)
 			{
 				List *objname = lfirst(lc);
-#if PG_MAJOR_VERSION < 1000
-				name = strVal(linitial(objname));
-#elif PG_MAJOR_VERSION < 1500
+#if PG_MAJOR_VERSION < 1500
 				name = strVal((Value *) objname);
 #else
 				name = strVal(castNode(String, objname));
@@ -526,9 +494,7 @@ call_ProcessUtility(PROCESS_UTILITY_PROTO_ARGS,
 			foreach(lc, ((DropStmt *)parsetree)->objects)
 			{
 				List *objname = lfirst(lc);
-#if PG_MAJOR_VERSION < 1000
-				name = strVal(linitial(objname));
-#elif PG_MAJOR_VERSION < 1500
+#if PG_MAJOR_VERSION < 1500
 				name = strVal((Value *) objname);
 #else
 				name = strVal(castNode(String, objname));

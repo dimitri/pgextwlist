@@ -14,7 +14,7 @@
 #error "Unknown PostgreSQL version"
 #endif
 
-#if PG_MAJOR_VERSION < 901
+#if PG_MAJOR_VERSION < 1000
 #error "Unsupported postgresql version"
 #endif
 

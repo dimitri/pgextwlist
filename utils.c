@@ -24,12 +24,7 @@
 #include "pgextwlist.h"
 #include "utils.h"
 
-#if PG_MAJOR_VERSION >= 903
 #include "access/htup_details.h"
-#else
-#include "access/htup.h"
-#endif
-
 #include "access/genam.h"
 #include "access/heapam.h"
 #include "access/skey.h"
@@ -473,11 +468,7 @@ execute_sql_string(const char *sql, const char *filename)
 	 */
 	foreach(lc1, raw_parsetree_list)
 	{
-#if PG_MAJOR_VERSION >= 1000
 		RawStmt	   *parsetree = lfirst_node(RawStmt, lc1);
-#else
-		Node	   *parsetree = (Node *) lfirst(lc1);
-#endif
 		List	   *stmt_list;
 		ListCell   *lc2;
 
@@ -493,9 +484,7 @@ execute_sql_string(const char *sql, const char *filename)
 										   sql,
 										   NULL,
 										   0
-#if PG_MAJOR_VERSION >= 1000
 										   , NULL
-#endif
 										   );
 #endif
 		stmt_list = pg_plan_queries(stmt_list,
@@ -507,11 +496,7 @@ execute_sql_string(const char *sql, const char *filename)
 
 		foreach(lc2, stmt_list)
 		{
-#if PG_MAJOR_VERSION >= 1000
 			PlannedStmt *stmt = lfirst_node(PlannedStmt, lc2);
-#else
-			Node	   *stmt = (Node *) lfirst(lc2);
-#endif
 
 			if (IsA(stmt, TransactionStmt))
 				ereport(ERROR,
@@ -531,14 +516,12 @@ execute_sql_string(const char *sql, const char *filename)
 										sql,
 										GetActiveSnapshot(), NULL,
 										dest, NULL,
-#if PG_MAJOR_VERSION >= 1000
 										NULL,
-#endif
 										0);
 
 				ExecutorStart(qdesc, 0);
 				ExecutorRun(qdesc, ForwardScanDirection, 0
-#if PG_MAJOR_VERSION >= 1000 && PG_MAJOR_VERSION < 1800
+#if PG_MAJOR_VERSION < 1800
 					, true
 #endif
 				);
@@ -554,16 +537,9 @@ execute_sql_string(const char *sql, const char *filename)
 #if PG_MAJOR_VERSION >= 1400
 							   false,		/* no need to copy */
 #endif
-#if PG_MAJOR_VERSION >= 903
 							   PROCESS_UTILITY_QUERY,
-#endif
 							   NULL,
-#if PG_MAJOR_VERSION >= 1000
 							   NULL,
-#endif
-#if PG_MAJOR_VERSION < 903
-							   false,		/* not top level */
-#endif
 							   dest,
 							   NULL);
 			}
@@ -600,10 +576,7 @@ get_current_database_owner_name(void)
 	else
 		return NULL;
 
-	return GetUserNameFromId(owner
-#if PG_MAJOR_VERSION >= 905
-							, false
-#endif
+	return GetUserNameFromId(owner, false
 	);
 }
 
@@ -634,12 +607,8 @@ execute_custom_script(const char *filename, const char *schemaName)
 		(void) set_config_option("client_min_messages", "warning",
 								 PGC_USERSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true
-#if PG_MAJOR_VERSION >= 902
 								 , 0
-#endif
-#if PG_MAJOR_VERSION >= 905
 								 , false
-#endif
 			);
 	/*
 	 * log_min_messages was changed from a scalar int (PG <= 18) to something
@@ -648,12 +617,8 @@ execute_custom_script(const char *filename, const char *schemaName)
 		(void) set_config_option("log_min_messages", "warning",
 								 PGC_SUSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true
-#if PG_MAJOR_VERSION >= 902
 								 , 0
-#endif
-#if PG_MAJOR_VERSION >= 905
 								 , false
-#endif
 			);
 
 	/*
@@ -672,12 +637,8 @@ execute_custom_script(const char *filename, const char *schemaName)
 	(void) set_config_option("search_path", pathbuf.data,
 							 PGC_USERSET, PGC_S_SESSION,
 							 GUC_ACTION_SAVE, true
-#if PG_MAJOR_VERSION >= 902
 							 , 0
-#endif
-#if PG_MAJOR_VERSION >= 905
 								 , false
-#endif
 		);
 
 	PG_TRY();
@@ -718,9 +679,7 @@ execute_custom_script(const char *filename, const char *schemaName)
 									CStringGetTextDatum("@current_user@"),
 									CStringGetTextDatum(
 										GetUserNameFromId(GetUserId()
-#if PG_MAJOR_VERSION >= 905
 														  , false
-#endif
 										)));
 
 		/*
