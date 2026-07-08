@@ -1,4 +1,7 @@
+*.bc
 *.o
 pgextwlist.so
+regression.*
+results/
 .deps
 .vagrant
