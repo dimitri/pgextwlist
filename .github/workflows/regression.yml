@@ -27,7 +27,7 @@ jobs:
         run: pg-start ${{ matrix.pg }}
 
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@main
 
       - name: Test on PostgreSQL ${{ matrix.pg }}
         run: pg-build-test
