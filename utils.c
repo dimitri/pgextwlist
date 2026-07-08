@@ -586,7 +586,7 @@ execute_sql_string(const char *sql, const char *filename)
  *  where datname = current_database();
  */
 static char *
-get_current_database_owner_name()
+get_current_database_owner_name(void)
 {
 	HeapTuple	dbtuple;
 	Oid         owner;
