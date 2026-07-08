@@ -212,3 +212,18 @@ control each time a utility statement is issued. When this statement is a
 `CREATE EXTENSION`, the extension's name is extracted from the `parsetree`
 and checked against the whitelist. *Superuser* is obtained as in the usual
 `SECURITY DEFINER` case, except hard coded to target the *bootstrap user*.
+
+## Maintenance & Support
+
+This project is maintained through [OSS
+Maintenance](https://oss.theartofpostgresql.com) — a funded model designed
+for **cloud providers and enterprises** running pgextwlist in production.
+
+- Priority bug fixes and improvements via a paid queue
+- Quarterly releases with predictable delivery
+- Upstream-first: fixes land in the project itself
+
+PostgreSQL consultancies can also subscribe at the **Partner** tier to cover
+their entire client base under a single plan.
+
+**[View support plans](https://oss.theartofpostgresql.com/#pricing)**
