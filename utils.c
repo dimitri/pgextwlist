@@ -578,6 +578,34 @@ get_current_database_owner_name(void)
 }
 
 /*
+ * Reject @-substitution values containing characters that could be used to
+ * break out of quoting in the resulting script (CVE-2023-39417; upstream
+ * fix cd5f2a3570). The check is applied to the raw, unquoted name because
+ * quote_identifier() output always contains '"', which would trip the
+ * check spuriously.
+ */
+static void
+check_substitution_value(const char *placeholder, const char *value)
+{
+	static const char forbidden[] = "\"$'\\";
+
+	if (value == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("invalid value for \"%s\" substitution",
+						placeholder)));
+
+	if (strpbrk(value, forbidden) != NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("invalid value for \"%s\" substitution",
+						placeholder),
+				 errdetail("Value must not contain any of: %s", forbidden),
+				 errhint("Rename the object referenced by %s.",
+						 placeholder)));
+}
+
+/*
  * Execute given script
  */
 void
@@ -585,7 +613,6 @@ execute_custom_script(const char *filename, const char *schemaName)
 {
 	int			save_nestlevel;
 	StringInfoData pathbuf;
-	const char *qSchemaName = quote_identifier(schemaName);
 
 	elog(DEBUG1, "Executing custom script \"%s\"", filename);
 
@@ -654,31 +681,40 @@ execute_custom_script(const char *filename, const char *schemaName)
 		/*
 		 * substitute the target schema name for occurrences of @extschema@.
 		 */
+		check_substitution_value("@extschema@", schemaName);
 		t_sql = DirectFunctionCall3Coll(replace_text,
 										C_COLLATION_OID,
 										t_sql,
 										CStringGetTextDatum("@extschema@"),
-										CStringGetTextDatum(qSchemaName));
+										CStringGetTextDatum(schemaName));
 
 		/*
 		 * substitute the current user name for occurrences of @current_user@
 		 */
-		t_sql = DirectFunctionCall3Coll(replace_text,
-										C_COLLATION_OID,
-										t_sql,
-										CStringGetTextDatum("@current_user@"),
-										CStringGetTextDatum(GetUserNameFromId(GetUserId()
-																			  ,false
-																			  )));
+		{
+			char	   *cur_user = GetUserNameFromId(GetUserId(), false);
+
+			check_substitution_value("@current_user@", cur_user);
+			t_sql = DirectFunctionCall3Coll(replace_text,
+											C_COLLATION_OID,
+											t_sql,
+											CStringGetTextDatum("@current_user@"),
+											CStringGetTextDatum(cur_user));
+		}
 
 		/*
 		 * substitute the database owner for occurrences of @database_owner@
 		 */
-		t_sql = DirectFunctionCall3Coll(replace_text,
-										C_COLLATION_OID,
-										t_sql,
-										CStringGetTextDatum("@database_owner@"),
-										CStringGetTextDatum(get_current_database_owner_name()));
+		{
+			char	   *db_owner = get_current_database_owner_name();
+
+			check_substitution_value("@database_owner@", db_owner);
+			t_sql = DirectFunctionCall3Coll(replace_text,
+											C_COLLATION_OID,
+											t_sql,
+											CStringGetTextDatum("@database_owner@"),
+											CStringGetTextDatum(db_owner));
+		}
 
 		/* And now back to C string */
 		c_sql = text_to_cstring(DatumGetTextPP(t_sql));
